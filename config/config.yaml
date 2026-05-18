@@ -1,0 +1,23 @@
+project:
+  name: LCGA-Self-Healing-IDS
+  version: "1.0.0"
+
+paths:
+  data_raw: data/raw
+  data_processed: data/processed
+  models: models
+  results: results
+
+nslkdd:
+  sequence_window: 10
+  top_features: 20
+
+cicids:
+  correlation_threshold: 0.85
+  random_state: 42
+
+training:
+  batch_size: 256
+  epochs: 60
+  patience: 10
+  learning_rate: 0.001
