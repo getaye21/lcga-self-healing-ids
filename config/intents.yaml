@@ -1,0 +1,97 @@
+intents:
+  I1:
+    name: HTTP Latency
+    metric: http_latency_ms
+    operator: lt
+    threshold: 200
+    t_verify_sec: 90
+    priority: 1
+    unit: ms
+  I2:
+    name: SSH Availability
+    metric: ssh_available
+    operator: eq
+    threshold: true
+    t_verify_sec: 60
+    priority: 1
+    unit: bool
+  I3:
+    name: Authentication Failure Rate
+    metric: failed_logins_per_min
+    operator: lt
+    threshold: 10
+    t_verify_sec: 60
+    priority: 2
+    unit: count/min
+  I4:
+    name: Port Scan Rate
+    metric: unique_ports_per_min
+    operator: lt
+    threshold: 5
+    t_verify_sec: 30
+    priority: 2
+    unit: count/min
+  I5:
+    name: Bandwidth Limit
+    metric: outbound_mbps
+    operator: lt
+    threshold: 100
+    t_verify_sec: 90
+    priority: 3
+    unit: Mbps
+
+attack_intent_map:
+  BENIGN: []
+  DoS Hulk: [I1, I5]
+  DoS GoldenEye: [I1]
+  DoS slowloris: [I1]
+  DoS Slowhttptest: [I1]
+  DDoS: [I1, I5]
+  PortScan: [I4]
+  FTP-Patator: [I3]
+  SSH-Patator: [I2, I3]
+  Bot: [I1, I5]
+  Web Attack Brute Force: [I3]
+  Web Attack XSS: [I1]
+  Web Attack Sql Injection: [I1]
+  Infiltration: [I2]
+  Heartbleed: [I2]
+
+healing_actions:
+  BLOCK_IP:
+    description: "Add firewall DROP rule for source IP"
+    severity: medium
+    t_verify_override: null
+  RATE_LIMIT:
+    description: "Cap bandwidth from source"
+    severity: low
+    t_verify_override: null
+  ISOLATE_SUBNET:
+    description: "Block entire /24 subnet"
+    severity: high
+    t_verify_override: 120
+  RESTART_SERVICE:
+    description: "Restart affected service"
+    severity: medium
+    t_verify_override: 90
+  ESCALATE:
+    description: "Alert SOC analyst"
+    severity: critical
+    t_verify_override: null
+
+default_action_map:
+  DoS Hulk: BLOCK_IP
+  DoS GoldenEye: RATE_LIMIT
+  DoS slowloris: BLOCK_IP
+  DoS Slowhttptest: RATE_LIMIT
+  DDoS: ISOLATE_SUBNET
+  PortScan: BLOCK_IP
+  FTP-Patator: BLOCK_IP
+  SSH-Patator: BLOCK_IP
+  Bot: ISOLATE_SUBNET
+  Web Attack Brute Force: BLOCK_IP
+  Web Attack XSS: RESTART_SERVICE
+  Web Attack Sql Injection: BLOCK_IP
+  Infiltration: ISOLATE_SUBNET
+  Heartbleed: RESTART_SERVICE
+  BENIGN: null
