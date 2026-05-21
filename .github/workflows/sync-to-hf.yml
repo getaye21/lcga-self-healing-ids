@@ -1,9 +1,7 @@
 name: Sync to Hugging Face hub
-
 on:
   push:
-    branches: [main]
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [main] # Change to 'master' if your main branch is called master
   workflow_dispatch:
 
 jobs:
@@ -11,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           lfs: true
@@ -20,7 +18,14 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          # 1. Configure Git
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          git remote add hf https://getaye21:$HF_TOKEN@huggingface.co/spaces/Getaye/lcga-self-healing-ids
+          
+          # 2. Add the Hugging Face remote
+          # We use 'x' as a dummy username because the token is the actual credential
+          git remote add hf https://Getaye:$HF_TOKEN@huggingface.co/spaces/Getaye/social-media-addiction-analyzer
+          
+          # 3. Push to the main branch
+          # This 'force' pushes your GitHub main to HF main
           git push --force hf main
