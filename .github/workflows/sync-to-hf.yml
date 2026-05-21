@@ -1,7 +1,9 @@
 name: Sync to Hugging Face hub
+
 on:
   push:
     branches: [main]
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -9,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
@@ -20,7 +22,5 @@ jobs:
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
-          
-          git remote add hf https://Getaye:$HF_TOKEN@huggingface.co/spaces/Getaye/lcga-self-healing-ids
-          
+          git remote add hf https://getaye21:$HF_TOKEN@huggingface.co/spaces/Getaye/lcga-self-healing-ids
           git push --force hf main
