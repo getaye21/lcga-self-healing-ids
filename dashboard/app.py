@@ -7,9 +7,8 @@ Deploy: streamlit run dashboard/app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time, os, sys, json, joblib, random
-import matplotlib.pyplot as plt
-from datetime import datetime
+import time
+import random
 
 # Page config
 st.set_page_config(
@@ -27,9 +26,6 @@ st.markdown("""
     .metric-card { background: #f8f9fa; border-radius: 10px; padding: 15px; text-align: center; }
     .metric-value { font-size: 2rem; font-weight: 700; }
     .metric-label { font-size: 0.85rem; color: #666; }
-    .healthy { color: #1D9E75; }
-    .violated { color: #E24B4A; }
-    .warning { color: #854F0B; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -103,34 +99,27 @@ with tab1:
     attack_types = ["DoS Hulk", "DDoS", "PortScan", "Bot", "Infiltration",
                     "Web Attack Brute Force", "SSH-Patator", "BENIGN"]
     counts = [random.randint(0, 50) for _ in attack_types]
-    fig, ax = plt.subplots(figsize=(10, 3))
-    ax.barh(attack_types, counts, color="#3B8BD4")
-    ax.set_xlabel("Count")
-    st.pyplot(fig)
+    chart_df = pd.DataFrame({"Attack": attack_types, "Count": counts}).set_index("Attack")
+    st.bar_chart(chart_df, height=300)
 
 # ── Tab 2: Intent Status ──
 with tab2:
     st.subheader("Network Intent Status")
     for intent, status in st.session_state.intent_status.items():
         emoji = "✅" if status == "healthy" else "🚨"
-        color = "green" if status == "healthy" else "red"
-        st.markdown(f"{emoji} **{intent}**: :{color}[{status.upper()}]")
+        st.markdown(f"{emoji} **{intent}**: {status.upper()}")
     st.caption("Intents evaluated every 5 seconds by MAPE-K loop")
 
 # ── Tab 3: Action Log ──
 with tab3:
     st.subheader("Self-Healing Action Log")
-    if len(st.session_state.action_log) == 0:
-        # Show sample log entries
-        sample_log = [
-            {"Time": "14:32:01", "Attack": "DoS Hulk", "Action": "BLOCK_IP", "MTTR": "91.6s", "Status": "✅"},
-            {"Time": "14:32:15", "Attack": "PortScan", "Action": "BLOCK_IP", "MTTR": "32.8s", "Status": "✅"},
-            {"Time": "14:33:02", "Attack": "DDoS", "Action": "ISOLATE_SUBNET", "MTTR": "92.6s", "Status": "✅"},
-            {"Time": "14:33:45", "Attack": "SSH-Patator", "Action": "BLOCK_IP", "MTTR": "62.1s", "Status": "❌"},
-        ]
-        st.dataframe(pd.DataFrame(sample_log), use_container_width=True)
-    else:
-        st.dataframe(pd.DataFrame(st.session_state.action_log), use_container_width=True)
+    sample_log = [
+        {"Time": "14:32:01", "Attack": "DoS Hulk", "Action": "BLOCK_IP", "MTTR": "91.6s", "Status": "✅"},
+        {"Time": "14:32:15", "Attack": "PortScan", "Action": "BLOCK_IP", "MTTR": "32.8s", "Status": "✅"},
+        {"Time": "14:33:02", "Attack": "DDoS", "Action": "ISOLATE_SUBNET", "MTTR": "92.6s", "Status": "✅"},
+        {"Time": "14:33:45", "Attack": "SSH-Patator", "Action": "BLOCK_IP", "MTTR": "62.1s", "Status": "❌"},
+    ]
+    st.dataframe(pd.DataFrame(sample_log), use_container_width=True)
     st.caption("Actions verified via MAPE-K closed-loop feedback")
 
 # ── Tab 4: Explainability ──
