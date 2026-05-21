@@ -1,3 +1,14 @@
+---
+title: LCGA Self-Healing IDS
+emoji: 🛡️
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+sdk_version: 1.28.0
+app_file: app.py
+pinned: true
+license: mit
+---
 lcga-self-healing-ids
 An Optimized Hybrid Deep Learning Framework for Real-Time Cyber Threat Detection and Self-Healing Network Security
 
