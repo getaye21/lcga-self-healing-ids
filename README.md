@@ -101,12 +101,3 @@ lcga-self-healing-ids/
 MIT License
 
 ---
-
-## 5. Next Steps for You
-
-1. **Create all the source files** on GitHub using the content above (paths starting with `src/`).
-2. **Update `README.md`** with the comprehensive version above.
-3. **Add `.github/workflows/deploy.yml`** (I'll provide if you want CI/CD for HF Spaces).
-4. **Push the Kaggle notebooks** to the `notebooks/` folder on GitHub (export as `.ipynb` from Kaggle).
-5. **Verify the Streamlit dashboard** loads correctly (it should already be connected to your repo).
-6. **Check the HuggingFace Space** is synced with your GitHub repo.
