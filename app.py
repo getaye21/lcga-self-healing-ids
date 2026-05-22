@@ -13,18 +13,78 @@ import shap
 
 st.set_page_config(page_title="LCGA IDS", page_icon="🛡️", layout="wide")
 
-# ---- Blue theme CSS ----
+# ---- Dark-Blue Theme with Visible Text ----
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(135deg, #0a1628, #1a2a4a, #0d2137); }
-    .main-header { font-size: 2.8rem; font-weight: 800; color: #4da8da; text-align: center; margin-bottom: 0.5rem; }
+    /* Background */
+    .stApp { background: linear-gradient(135deg, #0b1a30, #1a3350, #0d2540); }
+
+    /* All text light */
+    html, body, .stMarkdown, .stText, .stDataFrame, .stTable, .stCaption, .stMetric label {
+        color: #e0e8f0 !important;
+    }
+
+    /* Headers */
+    h1, h2, h3, h4 { color: #5cb8e6 !important; }
+    .main-header { font-size: 2.8rem; font-weight: 800; color: #5cb8e6; text-align: center; margin-bottom: 0.3rem; }
     .sub-header { font-size: 1.2rem; color: #a0c4e8; text-align: center; margin-bottom: 2rem; }
-    .card { background: rgba(20,40,70,0.7); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; margin: 1rem 0; border: 1px solid rgba(77,168,218,0.2); }
-    .stButton>button { background: linear-gradient(90deg, #4da8da, #3a7bd5); color: white; border: none; border-radius: 12px; font-weight: 600; padding: 0.6rem 2rem; transition: all 0.3s; }
-    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(77,168,218,0.3); }
-    .stTabs [data-baseweb="tab"] { border-radius: 8px 8px 0 0; padding: 10px 20px; background: rgba(77,168,218,0.08); color: #a0c4e8; }
-    .stTabs [aria-selected="true"] { background: rgba(77,168,218,0.2) !important; color: #4da8da !important; }
-    .stMetric { background: rgba(77,168,218,0.1); border-radius: 12px; padding: 1rem; }
+
+    /* Cards - colorful and visible */
+    .card {
+        background: rgba(30, 50, 80, 0.85);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 0.8rem 0;
+        border: 1px solid rgba(92, 184, 230, 0.3);
+        color: #e0e8f0;
+    }
+    .card-green  { border-left: 4px solid #2ecc71; }
+    .card-blue   { border-left: 4px solid #3498db; }
+    .card-orange { border-left: 4px solid #f39c12; }
+    .card-purple { border-left: 4px solid #9b59b6; }
+
+    /* Buttons */
+    .stButton>button {
+        background: linear-gradient(90deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.6rem 2rem;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52,152,219,0.4);
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        background: rgba(52,152,219,0.1);
+        color: #a0c4e8;
+    }
+    .stTabs [aria-selected="true"] {
+        background: rgba(52,152,219,0.25) !important;
+        color: #5cb8e6 !important;
+    }
+
+    /* Metrics */
+    .stMetric {
+        background: rgba(52,152,219,0.15);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    /* DataFrames */
+    .stDataFrame { color: #e0e8f0 !important; }
+    .stDataFrame th { background: rgba(52,152,219,0.3) !important; color: #e0e8f0 !important; }
+    .stDataFrame td { background: rgba(20,35,55,0.6) !important; color: #e0e8f0 !important; }
+
+    /* Info/Warning boxes */
+    .stAlert { color: #1a1a1a !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -42,24 +102,37 @@ def load_shap_explainer(_dt):
 
 @st.cache_data
 def load_csv(path):
-    return pd.read_csv(path) if os.path.exists(path) else None
+    try:
+        if os.path.exists(path):
+            return pd.read_csv(path)
+    except Exception:
+        pass
+    return None
 
 @st.cache_data
 def load_json(path):
     if os.path.exists(path):
-        with open(path) as f:
-            return json.load(f)
+        try:
+            with open(path) as f:
+                return json.load(f)
+        except Exception:
+            pass
     return None
 
 @st.cache_data
 def load_image(path):
-    return Image.open(path) if os.path.exists(path) else None
+    try:
+        if os.path.exists(path):
+            return Image.open(path)
+    except Exception:
+        pass
+    return None
 
 # ---------- Sidebar ----------
-st.sidebar.markdown("<h2 style='color:#4da8da;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("**Intent-Aware Self-Healing Network**")
+st.sidebar.markdown("<h2 style='color:#5cb8e6;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#a0c4e8;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
-st.sidebar.info("MSc Thesis - Addis Ababa University\n\nGetaye Fiseha, Mersen Getu, Chara Girma\n\n2026 LCGA Framework")
+st.sidebar.info("MSc Thesis - Addis Ababa University\n\nGetaye Fiseha, Mersen Getu, Chara Girma\n\n© 2026 LCGA Framework")
 
 # ---------- Load models ----------
 try:
@@ -67,39 +140,42 @@ try:
     shap_explainer = load_shap_explainer(dt)
     models_loaded = True
 except Exception as e:
-    st.error(f"Model files missing - upload dt_surrogate.pkl, cic_label_enc.pkl, cic_feature_names.pkl to models/. Error: {e}")
+    st.error(f"Model files missing – upload dt_surrogate.pkl, cic_label_enc.pkl, cic_feature_names.pkl to models/. Error: {e}")
     models_loaded = False
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-header'>Lightweight Hybrid Deep Learning for Real-Time Threat Detection & Intent-Aware Remediation</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-header'>Lightweight Hybrid Deep Learning for Real-Time Threat Detection &amp; Intent-Aware Remediation</div>", unsafe_allow_html=True)
 
 # ---------- Tabs ----------
 tabs = st.tabs([
-    "📖 Overview", "⚙️ Methodology", "📊 Precomputed Results",
-    "🧠 Live Detection", "🩺 Self-Healing Simulator",
-    "🔍 Explainability Explorer", "📋 Action Log", "📜 Conclusions"
+    "📖 Overview", "⚙️ Methodology", "📊 Results",
+    "🧠 Live Detection", "🩺 Simulator",
+    "🔍 Explainability", "📋 Action Log", "📜 Conclusions"
 ])
 
 # --- TAB 0: Overview ---
 with tabs[0]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Problem & Motivation")
     st.markdown("""
 Modern networks face a rapidly growing threat landscape. Existing IDS either:
-- Rely on **manual** investigation -> high MTTR
-- Operate as **black boxes** -> no operator trust
-- Lack **intent alignment** -> actions don't match business goals
+- Rely on **manual** investigation → high MTTR
+- Operate as **black boxes** → no operator trust
+- Lack **intent alignment** → actions don't match business goals
 
 **Our solution**: An explainable, intent-aware deep-learning framework that
 autonomously detects, classifies, and remediates network attacks in real time.
 """)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
     st.subheader("Key Contributions")
     st.markdown("""
-1. **LCGA** - CNN-GRU-Attention with 41k params, 99.67% accuracy
-2. **DT Surrogate + SHAP** - Explanations 11,635x faster than LIME
-3. **MAPE-K Orchestrator** - 87% MTTR reduction, 87.6% ISR
-4. **Fully Reproducible** - Open-source code, data, experiments
+1. **LCGA** – CNN‑GRU‑Attention with 41k params, 99.67% accuracy
+2. **DT Surrogate + SHAP** – Explanations 11,635× faster than LIME
+3. **MAPE‑K Orchestrator** – 87% MTTR reduction, 87.6% ISR
+4. **Fully Reproducible** – Open‑source code, data, experiments
 """)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -107,39 +183,39 @@ autonomously detects, classifies, and remediates network attacks in real time.
 with tabs[1]:
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
         st.subheader("LCGA Architecture")
         st.code("""
 Input (73 features)
-  -> Parallel Conv1D (32,3) + (64,5)
-  -> Concatenate -> GRU(64)
-  -> Multi-Head Self-Attention (2 heads)
-  -> GlobalAvgPool -> Dense(64)
-  -> Softmax (12 classes)
+  → Parallel Conv1D (32×3) + (64×5)
+  → Concatenate → GRU(64)
+  → Multi‑Head Self‑Attention (2 heads)
+  → GlobalAvgPool → Dense(64)
+  → Softmax (12 classes)
         """, language="text")
         st.metric("Trainable Parameters", "41,260")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.subheader("MAPE-K Self-Healing Loop")
+        st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
+        st.subheader("MAPE‑K Self‑Healing Loop")
         st.markdown("""
-1. **Monitor** - capture network telemetry
-2. **Analyze** - LCGA + DT surrogate + SHAP
-3. **Plan** - map attack to violated intents, select best action
-4. **Execute** - block IP, restart service, isolate subnet
-5. **Knowledge** - verify intent restoration, update success rates
+1. **Monitor** – capture network telemetry
+2. **Analyze** – LCGA + DT surrogate + SHAP
+3. **Plan** – map attack to violated intents, select best action
+4. **Execute** – block IP, restart service, isolate subnet
+5. **Knowledge** – verify intent restoration, update success rates
 """)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 2: Precomputed Results ---
+# --- TAB 2: Results ---
 with tabs[2]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Model Comparison")
     comp = load_csv("results/model_comparison.csv")
     if comp is not None:
         f1_cols = [c for c in comp.columns if "macro" in c.lower() and "f1" in c.lower()]
         if f1_cols:
-            st.dataframe(comp.style.highlight_max(subset=f1_cols[:1], color="#4da8da", axis=0),
+            st.dataframe(comp.style.highlight_max(subset=f1_cols[:1], color="#3498db", axis=0),
                          use_container_width=True)
         else:
             st.dataframe(comp, use_container_width=True)
@@ -149,29 +225,29 @@ with tabs[2]:
 
     col_a, col_b = st.columns(2)
     with col_a:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
         st.subheader("Training History")
         img = load_image("results/lcga_training_history.png")
         if img: st.image(img, use_column_width=True)
         else: st.info("Upload `results/lcga_training_history.png`")
         st.markdown("</div>", unsafe_allow_html=True)
     with col_b:
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
         st.subheader("Confusion Matrix")
         img = load_image("results/lcga_confusion_matrix.png")
         if img: st.image(img, use_column_width=True)
         else: st.info("Upload `results/lcga_confusion_matrix.png`")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-orange'>", unsafe_allow_html=True)
     st.subheader("System Comparison")
     sys_df = load_csv("results/system_comparison.csv")
     if sys_df is not None:
         fig = go.Figure()
         fig.add_trace(go.Bar(name="MTTR (s)", x=sys_df["System"], y=sys_df["MTTR_s"],
-                             marker_color=["#E24B4A","#854F0B","#4da8da"]))
+                             marker_color=["#E24B4A","#854F0B","#3498db"]))
         fig.add_trace(go.Bar(name="ISR (%)", x=sys_df["System"], y=sys_df["ISR_pct"],
-                             marker_color=["#E24B4A","#854F0B","#4da8da"], visible=False))
+                             marker_color=["#E24B4A","#854F0B","#3498db"], visible=False))
         fig.update_layout(barmode="group", updatemenus=[{
             "buttons": [
                 {"label": "MTTR", "method": "update", "args": [{"visible": [True, False]}]},
@@ -185,7 +261,7 @@ with tabs[2]:
 
 # --- TAB 3: Live Detection ---
 with tabs[3]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
     if not models_loaded:
         st.warning("Models not loaded.")
@@ -239,8 +315,8 @@ with tabs[3]:
 
 # --- TAB 4: Self-Healing Simulator ---
 with tabs[4]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("MAPE-K Self-Healing Simulator")
+    st.markdown("<div class='card card-orange'>", unsafe_allow_html=True)
+    st.subheader("MAPE‑K Self‑Healing Simulator")
     if st.button("Run Simulation Cycle"):
         intents = {"I1":{"name":"HTTP Latency","t_verify":90},
                    "I2":{"name":"SSH Availability","t_verify":60},
@@ -271,7 +347,7 @@ with tabs[4]:
 
 # --- TAB 5: Explainability Explorer ---
 with tabs[5]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
     if not models_loaded:
         st.warning("Models not loaded.")
@@ -298,8 +374,8 @@ with tabs[5]:
 
 # --- TAB 6: Action Log ---
 with tabs[6]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("MAPE-K Action Log")
+    st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
+    st.subheader("MAPE‑K Action Log")
     log_json = load_json("results/action_log_full.json")
     if log_json:
         st.dataframe(pd.DataFrame(log_json).head(30), use_container_width=True)
@@ -315,14 +391,14 @@ with tabs[6]:
 
 # --- TAB 7: Conclusions ---
 with tabs[7]:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
     st.subheader("Conclusions & Future Work")
     st.markdown("""
 - **LCGA** achieves 99.67% accuracy with only 41k parameters.
-- **MAPE-K orchestrator** delivers 87% MTTR reduction and 87.6% ISR.
-- **SHAP explanations** are 11,635x faster than LIME, enabling real-time trust.
+- **MAPE‑K orchestrator** delivers 87% MTTR reduction and 87.6% ISR.
+- **SHAP explanations** are 11,635× faster than LIME, enabling real‑time trust.
 
-**Future:** zero-day attacks, SDN hardware deployment, SIEM integration, federated learning.
+**Future:** zero‑day attacks, SDN hardware deployment, SIEM integration, federated learning.
 """)
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
