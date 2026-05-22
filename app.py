@@ -52,62 +52,65 @@ else:
 # ================== TAB 3: Live Detection ==================
 with tabs[3]:
 st.header("Live Network Flow Classification (DT Surrogate)")
-st.markdown("""
-**Upload a CSV file** with one or more flow records (same columns as CICIDS2017),
-or **use a random sample** from the test set.
-""")
+if not models_loaded:
+    st.warning("Models not loaded. Please check model files.")
+else:
+    st.markdown("""
+    **Upload a CSV file** with one or more flow records (same columns as CICIDS2017),
+    or **use a random sample**.
+    """)
 
-col1, col2 = st.columns(2)
-with col1:
-    uploaded_file = st.file_uploader("Upload CSV", type="csv")
-with col2:
-    use_random = st.button("Use random test sample")
+    col1, col2 = st.columns(2)
+    with col1:
+        uploaded_file = st.file_uploader("Upload CSV", type="csv")
+    with col2:
+        use_random = st.button("Use random test sample")
 
-input_data = None
-if uploaded_file is not None:
-    try:
-        df_input = pd.read_csv(uploaded_file)
-        expected_cols = list(feature_names)
-        if set(expected_cols).issubset(set(df_input.columns)):
-            input_data = df_input[expected_cols].values.astype(np.float32)
-            st.success(f"Loaded {len(input_data)} flow(s)")
+    input_data = None
+    if uploaded_file is not None:
+        try:
+            df_input = pd.read_csv(uploaded_file)
+            expected_cols = list(feature_names)
+            if set(expected_cols).issubset(set(df_input.columns)):
+                input_data = df_input[expected_cols].values.astype(np.float32)
+                st.success(f"Loaded {len(input_data)} flow(s)")
+            else:
+                st.error("CSV must contain all expected features.")
+        except Exception as e:
+            st.error(f"Error reading CSV: {e}")
+
+    if use_random:
+        np.random.seed(int(time.time()))
+        input_data = np.random.randn(5, 73).astype(np.float32)
+
+    if input_data is not None:
+        preds = dt.predict(input_data)
+        probs = dt.predict_proba(input_data)
+        confidences = np.max(probs, axis=1)
+        pred_labels = le.inverse_transform(preds)
+
+        st.subheader("Prediction Results")
+        for i, (label, conf) in enumerate(zip(pred_labels, confidences)):
+            st.write(f"**Sample {i+1}:** {label}  (confidence: {conf:.2%})")
+
+        # SHAP explanation for the first sample
+        st.subheader("SHAP Explanation (first sample)")
+        shap_vals = shap_explainer.shap_values(input_data[0:1])
+        if isinstance(shap_vals, list):
+            cls_idx = preds[0]
+            sv = shap_vals[cls_idx][0]
+            expected = shap_explainer.expected_value[cls_idx]
         else:
-            st.error("CSV must contain all expected features.")
-    except Exception as e:
-        st.error(f"Error reading CSV: {e}")
+            sv = shap_vals[0]
+            expected = shap_explainer.expected_value
+        fig = shap.force_plot(expected, sv, input_data[0], feature_names=feature_names,
+                              matplotlib=True, show=False)
+        st.pyplot(fig)
 
-if use_random:
-    np.random.seed(int(time.time()))
-    input_data = np.random.randn(5, 73).astype(np.float32)
-
-if input_data is not None:
-    preds = dt.predict(input_data)
-    probs = dt.predict_proba(input_data)
-    confidences = np.max(probs, axis=1)
-    pred_labels = le.inverse_transform(preds)
-
-    st.subheader("Prediction Results")
-    for i, (label, conf) in enumerate(zip(pred_labels, confidences)):
-        st.write(f"**Sample {i+1}:** {label}  (confidence: {conf:.2%})")
-
-    # SHAP explanation for the first sample
-    st.subheader("SHAP Explanation (first sample)")
-    shap_vals = shap_explainer.shap_values(input_data[0:1])
-    if isinstance(shap_vals, list):
-        cls_idx = preds[0]
-        sv = shap_vals[cls_idx][0]
-        expected = shap_explainer.expected_value[cls_idx]
-    else:
-        sv = shap_vals[0]
-        expected = shap_explainer.expected_value
-    fig = shap.force_plot(expected, sv, input_data[0], feature_names=feature_names,
-                          matplotlib=True, show=False)
-    st.pyplot(fig)
-
-    # Decision rule
-    st.subheader("Decision Tree Rule Path")
-    rule_text = export_text(dt, feature_names=list(feature_names), max_depth=5)
-    st.code(rule_text[:1500])
+        # Decision rule
+        st.subheader("Decision Tree Rule Path")
+        rule_text = export_text(dt, feature_names=list(feature_names), max_depth=5)
+        st.code(rule_text[:1500])
 
 # ================== TAB 4: Self-Healing Simulator ==================
 with tabs[4]:
@@ -163,26 +166,29 @@ if st.button("Run Simulation Cycle"):
 # ================== TAB 5: Explainability Explorer ==================
 with tabs[5]:
 st.header("Interactive Explainability Explorer")
-st.markdown("Upload a single flow (CSV row) and explore SHAP and LIME explanations.")
+if not models_loaded:
+    st.warning("Models not loaded.")
+else:
+    st.markdown("Upload a single flow (CSV row) and explore SHAP and LIME explanations.")
 
-uploaded_single = st.file_uploader("Upload single flow CSV", type="csv", key="single")
-if uploaded_single is not None:
-    df_single = pd.read_csv(uploaded_single)
-    if set(feature_names).issubset(set(df_single.columns)):
-        x = df_single[feature_names].values.astype(np.float32).reshape(1, -1)
-        pred = dt.predict(x)
-        cls = pred[0]
-        st.write(f"**Prediction:** {le.inverse_transform([cls])[0]}")
-        shap_vals = shap_explainer.shap_values(x)
-        if isinstance(shap_vals, list):
-            fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0],
-                                  x[0], feature_names=feature_names, matplotlib=True, show=False)
+    uploaded_single = st.file_uploader("Upload single flow CSV", type="csv", key="single")
+    if uploaded_single is not None:
+        df_single = pd.read_csv(uploaded_single)
+        if set(feature_names).issubset(set(df_single.columns)):
+            x = df_single[feature_names].values.astype(np.float32).reshape(1, -1)
+            pred = dt.predict(x)
+            cls = pred[0]
+            st.write(f"**Prediction:** {le.inverse_transform([cls])[0]}")
+            shap_vals = shap_explainer.shap_values(x)
+            if isinstance(shap_vals, list):
+                fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0],
+                                      x[0], feature_names=feature_names, matplotlib=True, show=False)
+            else:
+                fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0],
+                                      x[0], feature_names=feature_names, matplotlib=True, show=False)
+            st.pyplot(fig)
         else:
-            fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0],
-                                  x[0], feature_names=feature_names, matplotlib=True, show=False)
-        st.pyplot(fig)
-    else:
-        st.error("CSV must contain all expected features.")
+            st.error("CSV must contain all expected features.")
 
 # ================== TAB 6: Action Log ==================
 with tabs[6]:
