@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from PIL import Image
-import os, json, joblib, time
+import os, json, time, pickle
 from sklearn.tree import DecisionTreeClassifier, export_text
 import shap
 
@@ -16,20 +16,13 @@ st.set_page_config(page_title="LCGA IDS", page_icon="🛡️", layout="wide")
 # ---- Dark-Blue Theme with Visible Text ----
 st.markdown("""
 <style>
-    /* Background */
     .stApp { background: linear-gradient(135deg, #0b1a30, #1a3350, #0d2540); }
-
-    /* All text light */
     html, body, .stMarkdown, .stText, .stDataFrame, .stTable, .stCaption, .stMetric label {
         color: #e0e8f0 !important;
     }
-
-    /* Headers */
     h1, h2, h3, h4 { color: #5cb8e6 !important; }
     .main-header { font-size: 2.8rem; font-weight: 800; color: #5cb8e6; text-align: center; margin-bottom: 0.3rem; }
     .sub-header { font-size: 1.2rem; color: #a0c4e8; text-align: center; margin-bottom: 2rem; }
-
-    /* Cards - colorful and visible */
     .card {
         background: rgba(30, 50, 80, 0.85);
         backdrop-filter: blur(10px);
@@ -39,12 +32,10 @@ st.markdown("""
         border: 1px solid rgba(92, 184, 230, 0.3);
         color: #e0e8f0;
     }
-    .card-green  { border-left: 4px solid #2ecc71; }
     .card-blue   { border-left: 4px solid #3498db; }
+    .card-green  { border-left: 4px solid #2ecc71; }
     .card-orange { border-left: 4px solid #f39c12; }
     .card-purple { border-left: 4px solid #9b59b6; }
-
-    /* Buttons */
     .stButton>button {
         background: linear-gradient(90deg, #3498db, #2980b9);
         color: white;
@@ -54,36 +45,18 @@ st.markdown("""
         padding: 0.6rem 2rem;
         transition: all 0.3s;
     }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(52,152,219,0.4);
-    }
-
-    /* Tabs */
+    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
     .stTabs [data-baseweb="tab"] {
         border-radius: 8px 8px 0 0;
         padding: 10px 20px;
         background: rgba(52,152,219,0.1);
         color: #a0c4e8;
     }
-    .stTabs [aria-selected="true"] {
-        background: rgba(52,152,219,0.25) !important;
-        color: #5cb8e6 !important;
-    }
-
-    /* Metrics */
-    .stMetric {
-        background: rgba(52,152,219,0.15);
-        border-radius: 12px;
-        padding: 1rem;
-    }
-
-    /* DataFrames */
+    .stTabs [aria-selected="true"] { background: rgba(52,152,219,0.25) !important; color: #5cb8e6 !important; }
+    .stMetric { background: rgba(52,152,219,0.15); border-radius: 12px; padding: 1rem; }
     .stDataFrame { color: #e0e8f0 !important; }
     .stDataFrame th { background: rgba(52,152,219,0.3) !important; color: #e0e8f0 !important; }
     .stDataFrame td { background: rgba(20,35,55,0.6) !important; color: #e0e8f0 !important; }
-
-    /* Info/Warning boxes */
     .stAlert { color: #1a1a1a !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -91,10 +64,29 @@ st.markdown("""
 # ---------- Cache helpers ----------
 @st.cache_resource
 def load_surrogate():
-    dt = joblib.load("models/dt_surrogate.pkl")
-    le = joblib.load("models/cic_label_enc.pkl")
-    feature_names = joblib.load("models/cic_feature_names.pkl")
-    return dt, le, feature_names
+    """Load DT surrogate, label encoder, and feature names with fallback."""
+    # Try joblib first
+    try:
+        import joblib
+        dt = joblib.load("models/dt_surrogate.pkl")
+        le = joblib.load("models/cic_label_enc.pkl")
+        feature_names = joblib.load("models/cic_feature_names.pkl")
+        return dt, le, feature_names
+    except Exception:
+        # Fallback to pickle
+        try:
+            with open("models/dt_surrogate.pkl", "rb") as f:
+                dt = pickle.load(f)
+            with open("models/cic_label_enc.pkl", "rb") as f:
+                le = pickle.load(f)
+            with open("models/cic_feature_names.pkl", "rb") as f:
+                feature_names = pickle.load(f)
+            return dt, le, feature_names
+        except Exception as e:
+            st.error(f"""**Model files could not be loaded.**  
+            This is a version mismatch. Please re‑save the models in Kaggle with `protocol=4` and upload them again.  
+            Error: {e}""")
+            return None, None, None
 
 @st.cache_resource
 def load_shap_explainer(_dt):
@@ -132,16 +124,20 @@ def load_image(path):
 st.sidebar.markdown("<h2 style='color:#5cb8e6;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
 st.sidebar.markdown("<p style='color:#a0c4e8;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
-st.sidebar.info("MSc Thesis - Addis Ababa University\n\nGetaye Fiseha, Mersen Getu, Chara Girma\n\n© 2026 LCGA Framework")
+st.sidebar.info(
+    "Done by **Getaye Fiseha**, **Mersen Getu** and **Chara Girma** "
+    "at Addis Ababa University\n\n"
+    "Advised by **Dr. Yaregal A.**\n\n"
+    "© 2026 LCGA Framework"
+)
 
 # ---------- Load models ----------
-try:
-    dt, le, feature_names = load_surrogate()
+dt, le, feature_names = load_surrogate()
+models_loaded = (dt is not None)
+if models_loaded:
     shap_explainer = load_shap_explainer(dt)
-    models_loaded = True
-except Exception as e:
-    st.error(f"Model files missing – upload dt_surrogate.pkl, cic_label_enc.pkl, cic_feature_names.pkl to models/. Error: {e}")
-    models_loaded = False
+else:
+    st.warning("Models not loaded. Please re‑save and upload the model files from Kaggle.")
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
@@ -264,14 +260,13 @@ with tabs[3]:
     st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
     if not models_loaded:
-        st.warning("Models not loaded.")
+        st.warning("Models not loaded. Re‑save them in Kaggle and upload to the `models/` folder.")
     else:
         col1, col2 = st.columns(2)
         with col1:
             uploaded_file = st.file_uploader("Upload CSV", type="csv")
         with col2:
             use_random = st.button("Use random test sample")
-
         input_data = None
         if uploaded_file is not None:
             try:
@@ -283,11 +278,9 @@ with tabs[3]:
                     st.error("CSV must contain all expected features.")
             except Exception as e:
                 st.error(f"Error: {e}")
-
         if use_random:
             np.random.seed(int(time.time()))
             input_data = np.random.randn(5, 73).astype(np.float32)
-
         if input_data is not None:
             preds = dt.predict(input_data)
             probs = dt.predict_proba(input_data)
@@ -296,7 +289,6 @@ with tabs[3]:
             st.subheader("Predictions")
             for i, (lbl, conf) in enumerate(zip(labels, confidences)):
                 st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
-
             st.subheader("SHAP Explanation (first sample)")
             shap_vals = shap_explainer.shap_values(input_data[0:1])
             if isinstance(shap_vals, list):
@@ -308,7 +300,6 @@ with tabs[3]:
             fig = shap.force_plot(expected, sv, input_data[0], feature_names=feature_names,
                                   matplotlib=True, show=False)
             st.pyplot(fig)
-
             st.subheader("Decision Rule Path")
             st.code(export_text(dt, feature_names=list(feature_names), max_depth=5)[:1200])
     st.markdown("</div>", unsafe_allow_html=True)
