@@ -1,12 +1,12 @@
-**Total parameters: 41,260** — fast inference on CPU.
+**Total parameters: 41,260** - fast inference on CPU.
 """)
-st.header("MAPE‑K Self‑Healing Loop")
+st.header("MAPE-K Self-Healing Loop")
 st.markdown("""
-1. **Monitor** – capture network telemetry  
-2. **Analyze** – LCGA detects anomaly → DT surrogate classifies + SHAP explains  
-3. **Plan** – map attack to violated intents, select best healing action  
-4. **Execute** – block IP, restart service, isolate subnet, throttle bandwidth  
-5. **Knowledge** – verify intent restoration, update action success rates
+1. **Monitor** - capture network telemetry  
+2. **Analyze** - LCGA detects anomaly -> DT surrogate classifies + SHAP explains  
+3. **Plan** - map attack to violated intents, select best healing action  
+4. **Execute** - block IP, restart service, isolate subnet, throttle bandwidth  
+5. **Knowledge** - verify intent restoration, update action success rates
 """)
 
 # ================== TAB 2: Precomputed Results ==================
@@ -23,7 +23,7 @@ st.header("Training History")
 img = load_image("results/lcga_training_history.png")
 if img: st.image(img, use_column_width=True)
 
-st.header("Per‑Class F1")
+st.header("Per-Class F1")
 img = load_image("results/lcga_per_class_f1.png")
 if img: st.image(img, use_column_width=True)
 
@@ -77,7 +77,6 @@ if uploaded_file is not None:
         st.error(f"Error reading CSV: {e}")
 
 if use_random:
-    # Generate a random sample for demo
     np.random.seed(int(time.time()))
     input_data = np.random.randn(5, 73).astype(np.float32)
 
@@ -107,13 +106,12 @@ if input_data is not None:
 
     # Decision rule
     st.subheader("Decision Tree Rule Path")
-    from sklearn.tree import export_text
     rule_text = export_text(dt, feature_names=list(feature_names), max_depth=5)
     st.code(rule_text[:1500])
 
-# ================== TAB 4: Self‑Healing Simulator ==================
+# ================== TAB 4: Self-Healing Simulator ==================
 with tabs[4]:
-st.header("MAPE‑K Self‑Healing Simulator")
+st.header("MAPE-K Self-Healing Simulator")
 st.markdown("Simulate a stream of attacks and watch the orchestrator in action.")
 
 intents = {
@@ -188,7 +186,7 @@ if uploaded_single is not None:
 
 # ================== TAB 6: Action Log ==================
 with tabs[6]:
-st.header("MAPE‑K Action Log (from real test‑set execution)")
+st.header("MAPE-K Action Log (from real test-set execution)")
 log_json = load_json("results/action_log_full.json")
 if log_json:
     st.dataframe(pd.DataFrame(log_json).head(30), use_container_width=True)
@@ -207,12 +205,12 @@ with tabs[7]:
 st.header("Conclusions & Future Work")
 st.markdown("""
 - The **LCGA framework** successfully demonstrates autonomous threat detection,
-  intent‑aware classification, and closed‑loop self‑healing with **real‑time explanations**.
-- **87% MTTR reduction** and **87.6% ISR** validate the MAPE‑K orchestrator.
-- SHAP‑based explanations are **four orders of magnitude faster** than LIME.
+  intent-aware classification, and closed-loop self-healing with **real-time explanations**.
+- **87% MTTR reduction** and **87.6% ISR** validate the MAPE-K orchestrator.
+- SHAP-based explanations are **four orders of magnitude faster** than LIME.
 
-**Future directions:** zero‑day attacks via online learning, SDN hardware deployment,
-SIEM integration, and federated learning for multi‑site defense.
+**Future directions:** zero-day attacks via online learning, SDN hardware deployment,
+SIEM integration, and federated learning for multi-site defense.
 """)
 st.markdown("---")
 st.caption("LCGA Framework v1.0 | AAU MSc Thesis 2026 | [GitHub](https://github.com/getaye21/lcga-self-healing-ids)")
