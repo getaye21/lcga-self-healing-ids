@@ -81,15 +81,15 @@ tabs = st.tabs([
     "🔍 Explainability Explorer", "📋 Action Log", "📜 Conclusions"
 ])
 
-# ── TAB 0: Overview ──
+# --- TAB 0: Overview ---
 with tabs[0]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Problem & Motivation")
     st.markdown("""
 Modern networks face a rapidly growing threat landscape. Existing IDS either:
-- Rely on **manual** investigation → high MTTR
-- Operate as **black boxes** → no operator trust
-- Lack **intent alignment** → actions don't match business goals
+- Rely on **manual** investigation -> high MTTR
+- Operate as **black boxes** -> no operator trust
+- Lack **intent alignment** -> actions don't match business goals
 
 **Our solution**: An explainable, intent-aware deep-learning framework that
 autonomously detects, classifies, and remediates network attacks in real time.
@@ -97,13 +97,13 @@ autonomously detects, classifies, and remediates network attacks in real time.
     st.subheader("Key Contributions")
     st.markdown("""
 1. **LCGA** - CNN-GRU-Attention with 41k params, 99.67% accuracy
-2. **DT Surrogate + SHAP** - Explanations 11,635× faster than LIME
+2. **DT Surrogate + SHAP** - Explanations 11,635x faster than LIME
 3. **MAPE-K Orchestrator** - 87% MTTR reduction, 87.6% ISR
 4. **Fully Reproducible** - Open-source code, data, experiments
 """)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 1: Methodology ──
+# --- TAB 1: Methodology ---
 with tabs[1]:
     col1, col2 = st.columns(2)
     with col1:
@@ -131,7 +131,7 @@ Input (73 features)
 """)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 2: Precomputed Results ──
+# --- TAB 2: Precomputed Results ---
 with tabs[2]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Model Comparison")
@@ -183,7 +183,7 @@ with tabs[2]:
         st.info("Upload `results/system_comparison.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 3: Live Detection ──
+# --- TAB 3: Live Detection ---
 with tabs[3]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
@@ -237,7 +237,7 @@ with tabs[3]:
             st.code(export_text(dt, feature_names=list(feature_names), max_depth=5)[:1200])
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 4: Self-Healing Simulator ──
+# --- TAB 4: Self-Healing Simulator ---
 with tabs[4]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("MAPE-K Self-Healing Simulator")
@@ -269,7 +269,7 @@ with tabs[4]:
         col3.metric("Actions Executed", len(df))
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 5: Explainability Explorer ──
+# --- TAB 5: Explainability Explorer ---
 with tabs[5]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
@@ -296,7 +296,7 @@ with tabs[5]:
                 st.error("CSV missing required features.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 6: Action Log ──
+# --- TAB 6: Action Log ---
 with tabs[6]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("MAPE-K Action Log")
@@ -313,14 +313,14 @@ with tabs[6]:
         st.info("Upload `results/ablation_study.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ── TAB 7: Conclusions ──
+# --- TAB 7: Conclusions ---
 with tabs[7]:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("Conclusions & Future Work")
     st.markdown("""
 - **LCGA** achieves 99.67% accuracy with only 41k parameters.
 - **MAPE-K orchestrator** delivers 87% MTTR reduction and 87.6% ISR.
-- **SHAP explanations** are 11,635× faster than LIME, enabling real-time trust.
+- **SHAP explanations** are 11,635x faster than LIME, enabling real-time trust.
 
 **Future:** zero-day attacks, SDN hardware deployment, SIEM integration, federated learning.
 """)
