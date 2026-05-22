@@ -52,8 +52,20 @@ pip install -r requirements.txt
 streamlit run app.py
 Live Demo 🔗 https://lcga-self-healing-ids.streamlit.app
 
-📁 Repository Structure lcga-self-healing-ids/ ├── app.py ← Streamlit dashboard ├── src/ │ ├── preprocessing/ ← NSL-KDD & CICIDS2017 preprocessors │ ├── models/ ← LCGA, ANN, GRU, Ensemble │ ├── xai/ ← DT Surrogate + SHAP + LIME │ ├── mape_k/ ← Knowledge Base + Orchestrator │ ├── evaluation/ ← Metrics + comparison tables │ └── utils/ ← Visualization utilities ├── config/ │ ├── config.yaml ← Hyperparameters │ └── intents.yaml ← Intent KB + action library ├── notebooks/ ← Kaggle notebooks (00-05) └── models/ ← Trained model artifacts 📦 Kaggle Notebooks
+📁 Repository Structure 
+lcga-self-healing-ids/ ├── app.py ← Streamlit dashboard ├── src/ │ ├── preprocessing/ ← NSL-KDD & CICIDS2017 preprocessors │ ├── models/ ← LCGA, ANN, GRU, Ensemble │ ├── xai/ ← DT Surrogate + SHAP + LIME │ ├── mape_k/ ← Knowledge Base + Orchestrator │ ├── evaluation/ ← Metrics + comparison tables │ └── utils/ ← Visualization utilities ├── config/ │ ├── config.yaml ← Hyperparameters │ └── intents.yaml ← Intent KB + action library ├── notebooks/ ← Kaggle notebooks (00-05) └── models/ ← Trained model artifacts 
+📦 Kaggle Notebooks
 
-Notebook Link
-00 Full EDA Kaggle 01 Preprocessing Kaggle 02 Baseline Models Kaggle 03 LCGA Training Kaggle 04 DT Surrogate + SHAP Kaggle 05 MAPE-K Evaluation Kaggle 📄 Citation @mastersthesis{fiseha2026lcga, title = {An Optimized Hybrid Deep Learning Framework for Real-Time Cyber Threat Detection and Self-Healing Network Security}, author = {Fiseha, Getaye and Getu, Mersen and Girma, Chara}, school = {Addis Ababa University}, year = {2026}, type = {MSc Thesis} } 📜 License MIT License
-
+#	Notebook	Link
+00	Full EDA	Kaggle
+01	Preprocessing	Kaggle
+02	Baseline Models	Kaggle
+03	LCGA Training	Kaggle
+04	DT Surrogate + SHAP	Kaggle
+05	MAPE-K Evaluation	Kaggle
+📄 Citation		
+@mastersthesis{fiseha2026lcga,		
+title = {An Optimized Hybrid Deep Learning Framework for Real-Time		
+         Cyber Threat Detection and Self-Healing Network Security},
+author = {Fiseha, Getaye and Getu, Mersen and Girma, Chara}, school = {Addis Ababa University}, year = {2026}, type = {MSc Thesis} } 
+📜 License MIT License
