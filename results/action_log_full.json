@@ -1,0 +1,13 @@
+===== Sample MAPE‑K Action Log (first 10 entries) =====
+  Attack: DoS Hulk                  Action: BLOCK_IP        MTTR: 91.56s  Success: False
+  Attack: DDoS                      Action: ISOLATE_SUBNET  MTTR: 92.64s  Success: True
+  Attack: PortScan                  Action: BLOCK_IP        MTTR: 32.75s  Success: True
+  Attack: DoS Hulk                  Action: BLOCK_IP        MTTR: 92.22s  Success: True
+  Attack: PortScan                  Action: BLOCK_IP        MTTR: 31.94s  Success: True
+  Attack: PortScan                  Action: BLOCK_IP        MTTR: 31.78s  Success: False
+  Attack: DoS Hulk                  Action: BLOCK_IP        MTTR: 92.03s  Success: True
+  Attack: DDoS                      Action: ISOLATE_SUBNET  MTTR: 92.64s  Success: True
+  Attack: DoS Hulk                  Action: BLOCK_IP        MTTR: 90.99s  Success: True
+  Attack: DDoS                      Action: ISOLATE_SUBNET  MTTR: 92.37s  Success: True
+
+✓ Action log saved
