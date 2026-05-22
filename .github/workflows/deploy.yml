@@ -12,6 +12,8 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+      - name: Clear HF cache
+        run: rm -rf ~/.cache/huggingface/
       - uses: huggingface/hub-sync@v0.1.0
         with:
           github_repo_id: ${{ github.repository }}
