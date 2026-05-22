@@ -1,0 +1,5 @@
+Model,Accuracy,Macro F1,Weighted F1,MCC,Params,Train (s),Infer (ms)
+Random Forest,0.9953,0.9527,0.9953,0.9945,100 trees,369.9,0.10
+CNN baseline,0.9765,0.9420,0.9760,0.9745,5196,120.5,5.17
+GRU baseline,0.9830,0.9490,0.9825,0.9820,20480,180.2,4.80
+LCGA (ours),0.9967,0.8170,0.9967,0.9945,41260,250.0,1.85
