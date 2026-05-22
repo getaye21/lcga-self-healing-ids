@@ -1,0 +1,8 @@
+===== Ablation Study =====
+f1_score imported ✓
+                      Macro F1 ISR (%) MTTR (s)
+Full LCGA + MAPE‑K    0.816979    87.6     78.4
+No KB Feedback        0.816979    72.4     17.1
+Open‑loop (baseline)  0.816979     0.0    598.5
+
+✓ All results saved
