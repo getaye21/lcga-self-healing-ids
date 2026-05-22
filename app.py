@@ -13,7 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Sidebar
 st.sidebar.title("🛡️ LCGA IDS")
 st.sidebar.markdown("**Intent-Aware Self-Healing Network**")
 st.sidebar.markdown("---")
@@ -23,7 +22,6 @@ st.sidebar.info(
     "2026 LCGA Framework"
 )
 
-# Session state
 if "history" not in st.session_state:
     st.session_state.history = pd.DataFrame(
         columns=["timestamp", "attack", "action", "intents", "restored"]
@@ -127,7 +125,7 @@ with tab4:
         st.write("1. Flow Duration  (SHAP 0.432)")
         st.write("2. Bwd Packet Length Std  (SHAP 0.318)")
         st.write("3. Packet Length Mean  (SHAP 0.251)")
-        st.caption("Based on Decision Tree surrogate model - see `src/xai/explainer.py`")
+        st.caption("Based on Decision Tree surrogate model")
     else:
         st.write("No prediction yet - click 'Run Detection Cycle'.")
 
