@@ -1,1 +1,15 @@
+# ==================== A.7 Save NSL‑KDD Model‑Ready Artifacts ====================
+np.save(os.path.join(OUT_DIR, "nsl_Xtrain_seq.npy"),  X_train_seq)
+np.save(os.path.join(OUT_DIR, "nsl_Xtrain_flat.npy"), X_train_res)
+np.save(os.path.join(OUT_DIR, "nsl_ytrain.npy"),       y_train_res)
+np.save(os.path.join(OUT_DIR, "nsl_Xval_seq.npy"),     X_val_seq)
+np.save(os.path.join(OUT_DIR, "nsl_Xval_flat.npy"),    X_val_sc)
+np.save(os.path.join(OUT_DIR, "nsl_yval.npy"),          y_val_nsl)
+np.save(os.path.join(OUT_DIR, "nsl_Xtest_seq.npy"),    X_test_seq)
+np.save(os.path.join(OUT_DIR, "nsl_Xtest_flat.npy"),   X_test_sc)
+np.save(os.path.join(OUT_DIR, "nsl_ytest.npy"),         y_test_nsl)
 
+joblib.dump(scaler_nsl,         os.path.join(OUT_DIR, "nsl_scaler.pkl"))
+joblib.dump(rfe_mask,           os.path.join(OUT_DIR, "nsl_rfe_mask.pkl"))
+joblib.dump(selected_names_nsl, os.path.join(OUT_DIR, "nsl_selected_features.pkl"))
+print("NSL‑KDD model‑ready artifacts saved ✓")
