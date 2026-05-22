@@ -1,6 +1,0 @@
-===== System Comparison =====
-System                           MTTR (s)    ISR (%)
-----------------------------------------------------
-Open‑loop (no healing)              598.5        0.0
-Rule‑based healing                   65.1       64.2
-LCGA + MAPE‑K (ours)                 78.4       87.6
