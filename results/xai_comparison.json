@@ -1,0 +1,21 @@
+# ==================== STEP 5: SHAP vs LIME COMPARISON ====================
+# ==================== SAVE XAI COMPARISON ====================
+# Convert all values to native Python types
+xai_comparison = {
+    "shap_ms": float(shap_ms),
+    "lime_ms": float(lime_ms),
+    "lime_consistency": float(consistency) if 'consistency' in locals() else None,
+    "surrogate_fidelity": float(surrogate_fidelity),
+    "dt_depth": int(dt.get_depth()),
+    "dt_leaves": int(dt.get_n_leaves()),
+}
+
+with open(os.path.join(RES_DIR, "xai_comparison.json"), "w") as f:
+    json.dump(xai_comparison, f, indent=2)
+
+print("✓ XAI comparison saved to", os.path.join(RES_DIR, "xai_comparison.json"))
+print(f"  SHAP: {xai_comparison['shap_ms']:.2f} ms | LIME: {xai_comparison['lime_ms']:.1f} ms")
+print(f"  Speedup: {xai_comparison['lime_ms']/xai_comparison['shap_ms']:.0f}×")
+if xai_comparison['lime_consistency'] is not None:
+    print(f"  LIME consistency: {xai_comparison['lime_consistency']:.1%}")
+print(f"  Surrogate fidelity: {xai_comparison['surrogate_fidelity']:.4f}")
