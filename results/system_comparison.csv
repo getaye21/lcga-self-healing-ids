@@ -1,0 +1,4 @@
+System,MTTR_s,ISR_pct
+Open-loop,598.5,0.0
+Rule-based,65.1,64.2
+LCGA+MAPE-K,78.4,87.6
