@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from PIL import Image
-import os, json, time, pickle
+import os, json, time
+import joblib
 from sklearn.tree import DecisionTreeClassifier, export_text
 import shap
 
@@ -39,12 +40,10 @@ st.markdown("""
 # ---------- Cache helpers ----------
 @st.cache_resource
 def load_surrogate():
-    """Load DT surrogate and label encoder via raw pickle. Feature names are embedded."""
+    """Load DT surrogate and label encoder via joblib. Feature names are embedded."""
     try:
-        with open("models/dt_surrogate.pkl", "rb") as f:
-            dt = pickle.load(f)
-        with open("models/cic_label_enc.pkl", "rb") as f:
-            le = pickle.load(f)
+        dt = joblib.load("models/dt_surrogate.pkl")
+        le = joblib.load("models/cic_label_enc.pkl")
     except Exception as e:
         st.error(f"Model loading failed: {e}")
         return None, None, None
@@ -112,7 +111,7 @@ models_loaded = (dt is not None)
 if models_loaded:
     shap_explainer = load_shap_explainer(dt)
 else:
-    st.warning("Models not loaded. Re‑save with `pickle.dump()` in Kaggle and upload to `models/`.")
+    st.warning("Models not loaded. Upload joblib‑saved files to `models/`.")
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
