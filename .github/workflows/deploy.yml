@@ -13,12 +13,12 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Install huggingface_hub
-        run: pip install "huggingface-hub[cli]>=0.20"
+      - name: Install latest Hugging Face Hub
+        run: pip install "huggingface-hub[hf]>=0.20"
 
       - name: Upload to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli whoami
-          huggingface-cli upload Getaye/lcga-self-healing-ids . . --repo-type=space --commit-message="Sync from GitHub Actions"
+          hf auth login --token $HF_TOKEN
+          hf upload Getaye/lcga-self-healing-ids . . --repo-type=space --commit-message="Sync from GitHub Actions"
