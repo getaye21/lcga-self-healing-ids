@@ -9,20 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-          lfs: true
+          python-version: "3.10"
 
-      - name: Install git-xet
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/huggingface/xet-core/refs/heads/main/git_xet/install.sh | sh
-          git xet install
+      - name: Install huggingface_hub
+        run: pip install "huggingface-hub[cli]>=1.1.0"
 
-      - name: Push to Hugging Face
+      - name: Upload to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git remote add hf https://Getaye:$HF_TOKEN@huggingface.co/spaces/Getaye/lcga-self-healing-ids
-          git push --force hf main
+          huggingface-cli upload Getaye/lcga-self-healing-ids . . --repo-type=space --commit-message="Sync from GitHub Actions"
