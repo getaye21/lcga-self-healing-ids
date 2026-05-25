@@ -39,20 +39,16 @@ st.markdown("""
 # ---------- Cache helpers ----------
 @st.cache_resource
 def load_surrogate():
-    """Load DT surrogate and label encoder. Feature names are embedded."""
+    """Load DT surrogate and label encoder via raw pickle. Feature names are embedded."""
     try:
-        import joblib
-        dt = joblib.load("models/dt_surrogate.pkl")
-        le = joblib.load("models/cic_label_enc.pkl")
-    except Exception:
-        try:
-            with open("models/dt_surrogate.pkl", "rb") as f: dt = pickle.load(f)
-            with open("models/cic_label_enc.pkl", "rb") as f: le = pickle.load(f)
-        except Exception as e:
-            st.error(f"Model loading failed: {e}")
-            return None, None, None
+        with open("models/dt_surrogate.pkl", "rb") as f:
+            dt = pickle.load(f)
+        with open("models/cic_label_enc.pkl", "rb") as f:
+            le = pickle.load(f)
+    except Exception as e:
+        st.error(f"Model loading failed: {e}")
+        return None, None, None
 
-    # Embedded feature names (73 CICIDS2017 features after correlation filter)
     feature_names = [
         "Destination Port","Flow Duration","Total Fwd Packets","Total Backward Packets",
         "Total Length of Fwd Packets","Total Length of Bwd Packets","Fwd Packet Length Max",
@@ -116,7 +112,7 @@ models_loaded = (dt is not None)
 if models_loaded:
     shap_explainer = load_shap_explainer(dt)
 else:
-    st.warning("Models not loaded. Please upload dt_surrogate.pkl and cic_label_enc.pkl to the models/ folder.")
+    st.warning("Models not loaded. Re‑save with `pickle.dump()` in Kaggle and upload to `models/`.")
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
@@ -136,7 +132,8 @@ with tabs[0]:
     st.markdown("""Modern networks face a rapidly growing threat landscape. Existing IDS either:
 - Rely on **manual** investigation → high MTTR
 - Operate as **black boxes** → no operator trust
-- Lack **intent alignment** → actions don't match business goals\n
+- Lack **intent alignment** → actions don't match business goals
+
 **Our solution**: An explainable, intent-aware deep-learning framework that autonomously detects, classifies, and remediates network attacks in real time.""")
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
@@ -176,7 +173,6 @@ with tabs[2]:
         st.dataframe(comp.style.highlight_max(subset=f1_cols[:1] if f1_cols else [], color="#3498db", axis=0) if f1_cols else comp, use_container_width=True)
     else: st.info("Upload `results/model_comparison.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
-
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
@@ -192,7 +188,6 @@ with tabs[2]:
         if img: st.image(img, use_column_width=True)
         else: st.info("Upload `results/lcga_confusion_matrix.png`")
         st.markdown("</div>", unsafe_allow_html=True)
-
     st.markdown("<div class='card card-orange'>", unsafe_allow_html=True)
     st.subheader("System Comparison")
     sys_df = load_csv("results/system_comparison.csv")
@@ -313,7 +308,8 @@ with tabs[7]:
     st.subheader("Conclusions & Future Work")
     st.markdown("""- **LCGA** achieves 99.67% accuracy with only 41k parameters.
 - **MAPE‑K orchestrator** delivers 87% MTTR reduction and 87.6% ISR.
-- **SHAP explanations** are 11,635× faster than LIME, enabling real‑time trust.\n
+- **SHAP explanations** are 11,635× faster than LIME, enabling real‑time trust.
+
 **Future:** zero‑day attacks, SDN hardware deployment, SIEM integration, federated learning.""")
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("---")
