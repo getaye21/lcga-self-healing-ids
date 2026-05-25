@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Install latest Hugging Face Hub
+      - name: Install Hugging Face Hub
         run: pip install "huggingface-hub[hf]>=0.20"
 
       - name: Upload to Hugging Face Space
