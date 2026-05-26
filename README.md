@@ -12,7 +12,7 @@ license: mit
 
 # LCGA Self-Healing IDS
 
-**A lightweight, explainable hybrid deep-learning framework for real-time cyber threat detection and intent-aware self-healing network security**
+**A Lightweight Hybrid Deep Learning Framework for Real-Time Cyber Threat Detection and Intent-Aware Self-Healing Network Security**
 
 **MSc Thesis — Addis Ababa University, Department of Computer Science**
 
@@ -96,7 +96,7 @@ lcga-self-healing-ids/
 │   ├── evaluation/
 │   └── utils/
 ├── .gitignore
-│   LICENSE
+├── LICENSE
 ├── README.md
 ├── app.py
 ├── packages.txt
