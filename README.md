@@ -12,7 +12,7 @@ license: mit
 
 # LCGA Self-Healing IDS
 
-**An Optimized Hybrid Deep Learning Framework for Real-Time Cyber Threat Detection and Self-Healing Network Security**
+**A lightweight, explainable hybrid deep-learning framework for real-time cyber threat detection and intent-aware self-healing network security**
 
 **MSc Thesis — Addis Ababa University, Department of Computer Science**
 
@@ -79,12 +79,15 @@ Try the interactive dashboard on Hugging Face Spaces: [lcga-self-healing-ids](ht
 
 ```text
 lcga-self-healing-ids/
-├── app.py
-├── train.py
-├── requirements.txt
+├── .devcontainer/
+├── .github/
+├── .streamlit/
 ├── config/
 │   ├── config.yaml
 │   └── intents.yaml
+├── models/
+├── notebooks/
+├── results/
 ├── src/
 │   ├── preprocessing/
 │   ├── models/
@@ -92,11 +95,12 @@ lcga-self-healing-ids/
 │   ├── mape_k/
 │   ├── evaluation/
 │   └── utils/
-├── dashboard/
-│   └── app.py
-├── notebooks/
-├── models/
-└── results/
+├── .gitignore
+│   LICENSE
+├── README.md
+├── app.py
+├── packages.txt
+└── requirements.txt
 ```
 
 ## Kaggle Notebooks
