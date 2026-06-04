@@ -1,7 +1,13 @@
 [server]
-headless = true
-port = 8501
-enableCORS = false
+# Remove the default 200 MB per-file upload cap.
+# Set to a high value (10 GB) — HuggingFace Spaces will cap at its own limit
+# but this removes the Streamlit-level restriction.
+maxUploadSize = 10240
 
-[browser]
-gatherUsageStats = false
+[theme]
+base = "light"
+primaryColor = "#4472C4"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F4FF"
+textColor = "#1A2A4A"
+font = "sans serif"
