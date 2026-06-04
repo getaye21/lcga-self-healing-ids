@@ -23,38 +23,23 @@ AAU_LIGHT_BG = "#f0f4f8"
 
 st.markdown(f"""
 <style>
-    /* Main background light */
-    .stApp {{
-        background: {AAU_LIGHT_BG};
-    }}
-    /* Sidebar styling - AAU blue gradient */
+    .stApp {{ background: {AAU_LIGHT_BG}; }}
     [data-testid="stSidebar"] {{
         background: linear-gradient(135deg, {AAU_BLUE} 0%, #2c6e9e 100%);
     }}
-    [data-testid="stSidebar"] * {{
-        color: {AAU_WHITE} !important;
-    }}
+    [data-testid="stSidebar"] * {{ color: {AAU_WHITE} !important; }}
     [data-testid="stSidebar"] .stMarkdown, 
     [data-testid="stSidebar"] .stText,
     [data-testid="stSidebar"] .stSelectbox label,
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h1, h2, h3,
     [data-testid="stSidebar"] .stInfo,
     [data-testid="stSidebar"] .stAlert,
-    [data-testid="stSidebar"] .stButton>button {{
-        color: {AAU_WHITE} !important;
-    }}
-    /* Sidebar button hover */
+    [data-testid="stSidebar"] .stButton>button {{ color: {AAU_WHITE} !important; }}
     [data-testid="stSidebar"] .stButton>button:hover {{
         background-color: {AAU_YELLOW} !important;
         color: {AAU_BLUE} !important;
-        border: none;
     }}
-    /* Main content cards */
-    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown {{
-        color: {AAU_BLUE};
-    }}
+    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown {{ color: {AAU_BLUE}; }}
     .card {{
         background: {AAU_WHITE};
         border-radius: 16px;
@@ -72,7 +57,6 @@ st.markdown(f"""
         color: {AAU_BLUE};
         text-align: center;
         margin-bottom: 0.3rem;
-        letter-spacing: -0.5px;
     }}
     .sub-header {{
         font-size: 1.2rem;
@@ -119,7 +103,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- Define the EXACT 73 features your DT expects ----------
+# ---------- Define the EXACT 73 features ----------
 EXPECTED_FEATURES_73 = [
     "Destination Port", "Flow Duration", "Total Fwd Packets", "Total Backward Packets",
     "Total Length of Fwd Packets", "Total Length of Bwd Packets", "Fwd Packet Length Max",
@@ -144,7 +128,6 @@ EXPECTED_FEATURES_73 = [
 
 # ---------- Helper: align any DataFrame to expected 73 features ----------
 def align_to_73_features(df):
-    """Keep only expected columns, add missing with 0, reorder."""
     df.columns = df.columns.str.strip()
     missing = [col for col in EXPECTED_FEATURES_73 if col not in df.columns]
     if missing:
@@ -200,16 +183,16 @@ else:
     st.warning("Models not loaded. Place joblib files in `models/`.")
     n_features = 73
 
-# ---------- Sidebar (AAU themed) ----------
+# ---------- Sidebar (AAU themed, no external image) ----------
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/en/thumb/3/33/Addis_Ababa_University_logo.png/150px-Addis_Ababa_University_logo.png", width=80)
-    st.markdown(f"<h2 style='color:{AAU_YELLOW}; margin-top:-10px;'>LCGA IDS</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color:{AAU_WHITE};'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='color:{AAU_YELLOW}; text-align:center;'>🛡️</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color:{AAU_YELLOW}; text-align:center;'>LCGA IDS</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:{AAU_WHITE}; text-align:center;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
     st.markdown("---")
     st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.9rem;'><b>Researchers:</b><br>Getaye Fiseha<br>Mersen Getu<br>Chara Girma</p>", unsafe_allow_html=True)
     st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.9rem;'><b>Advisor:</b><br>Dr. Yaregal A.</p>", unsafe_allow_html=True)
     st.markdown("---")
-    st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.8rem;'>© 2026 LCGA Framework<br>Addis Ababa University</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.8rem; text-align:center;'>© 2026 LCGA Framework<br>Addis Ababa University</p>", unsafe_allow_html=True)
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
@@ -297,7 +280,7 @@ with tabs[2]:
     else: st.info("Upload `results/system_comparison.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 3: Live Detection (AUTO‑ALIGNED to 73 features) ---
+# --- TAB 3: Live Detection (AUTO‑ALIGNED) ---
 with tabs[3]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
@@ -336,20 +319,21 @@ with tabs[3]:
             for i, (lbl, conf) in enumerate(zip(labels, confidences)):
                 st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
 
-            # SHAP explanation for first sample (fixed API)
+            # SHAP explanation for first sample (FIXED)
             st.subheader("SHAP Explanation (first sample)")
             shap_vals = shap_explainer.shap_values(input_data[0:1])
             cls_idx = preds[0]
             if isinstance(shap_vals, list):
                 sv = shap_vals[cls_idx][0]
-                expected = shap_explainer.expected_value[cls_idx]
+                base = shap_explainer.expected_value[cls_idx]
             else:
                 sv = shap_vals[0]
-                expected = shap_explainer.expected_value
+                base = shap_explainer.expected_value
 
-            fig = shap.plots.force(expected, sv, input_data[0],
-                                   feature_names=feature_names,
-                                   matplotlib=True, show=False)
+            # Use shap.force_plot with matplotlib=True (compatible with older SHAP)
+            fig = shap.force_plot(base, sv, input_data[0],
+                                  feature_names=feature_names,
+                                  matplotlib=True, show=False)
             st.pyplot(fig)
 
             st.subheader("Decision Tree Rule Path (first 5 levels)")
@@ -402,11 +386,11 @@ with tabs[5]:
             st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
             shap_vals = shap_explainer.shap_values(x)
             if isinstance(shap_vals, list):
-                fig = shap.plots.force(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0],
-                                       feature_names=feature_names, matplotlib=True, show=False)
+                fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0],
+                                      feature_names=feature_names, matplotlib=True, show=False)
             else:
-                fig = shap.plots.force(shap_explainer.expected_value, shap_vals[0], x[0],
-                                       feature_names=feature_names, matplotlib=True, show=False)
+                fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0], x[0],
+                                      feature_names=feature_names, matplotlib=True, show=False)
             st.pyplot(fig)
     st.markdown("</div>", unsafe_allow_html=True)
 
