@@ -1,6 +1,6 @@
 """
 LCGA Self-Healing IDS — Real-Time Scientific Dashboard  v3.0
-MSc Thesis | Addis Ababa University
+MSc ML Thesis | Addis Ababa University
 Fixes:
   - class labels shown as integers → mapped to CICIDS2017 names
   - SHAP NotImplementedError   → use shap.Explainer (universal) with fallback
@@ -260,7 +260,7 @@ st.sidebar.title("🛡️ LCGA IDS")
 st.sidebar.markdown("**Intent-Aware Self-Healing Network**")
 st.sidebar.markdown("---")
 st.sidebar.info(
-    "**MSc Thesis** — Addis Ababa University\n\n"
+    "**MSc ML Thesis** — Addis Ababa University\n\n"
     "Getaye Fiseha · Mersen Getu · Chara Girma\n\n"
     "Advisor: Dr. Yaregal A.\n\n"
     "June 2026"
@@ -280,7 +280,7 @@ st.sidebar.markdown("[📂 GitHub](https://github.com/getaye21/lcga-self-healing
 st.title("🛡️ LCGA Self-Healing IDS — Scientific Dashboard")
 st.markdown(
     "**Lightweight CNN-GRU-Attention · SHAP Explainability · MAPE-K Closed-Loop Remediation**  \n"
-    "*MSc Thesis, Department of Computer Science, Addis Ababa University, June 2026*"
+    "*MSc ML Thesis, Department of Computer Science, Addis Ababa University, June 2026*"
 )
 
 # ── 8 tabs matching the original structure ────────────────────────────────────
@@ -853,6 +853,6 @@ self-healing for network security.
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.caption(
-    "LCGA Self-Healing IDS v3.0 · MSc Thesis, Addis Ababa University, June 2026 · "
+    "LCGA Self-Healing IDS v3.0 · MSc ML Thesis, Addis Ababa University, June 2026 · "
     "[GitHub](https://github.com/getaye21/lcga-self-healing-ids)"
 )
