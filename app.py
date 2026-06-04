@@ -1,6 +1,6 @@
 """
 LCGA Self-Healing IDS — Real-Time Scientific Dashboard  v3.0
-MSc ML Thesis | Addis Ababa University
+MSc Thesis | Addis Ababa University
 Fixes:
   - class labels shown as integers → mapped to CICIDS2017 names
   - SHAP NotImplementedError   → use shap.Explainer (universal) with fallback
@@ -84,7 +84,7 @@ ACTION_MAP = {
     "FTP-Patator":     "BLOCK_IP",
     "Heartbleed":      "RESTART_SERVICE",
     "Infiltration":    "ISOLATE_SUBNET",
-    "BENIGN":          "NONE",
+    "BENIGN":          "—",
 }
 
 INTENT_VIOLATIONS = {
@@ -254,34 +254,83 @@ def simulate_telemetry():
 # ═══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR
 # ═══════════════════════════════════════════════════════════════════════════════
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/AAU_Logo.png/200px-AAU_Logo.png",
-                 use_column_width=True) if False else None   # logo placeholder
 st.sidebar.title("🛡️ LCGA IDS")
-st.sidebar.markdown("**Intent-Aware Self-Healing Network**")
+st.sidebar.markdown("**Intent-Aware Self-Healing Network Security**")
 st.sidebar.markdown("---")
-st.sidebar.info(
-    "**MSc ML Thesis** — Addis Ababa University\n\n"
-    "Getaye Fiseha · Mersen Getu · Chara Girma\n\n"
-    "Advisor: Dr. Yaregal A.\n\n"
-    "June 2026"
-)
-st.sidebar.markdown("---")
-st.sidebar.markdown("**Key Results**")
-st.sidebar.metric("Accuracy",       "99.67%")
-st.sidebar.metric("MTTR Reduction", "87%")
-st.sidebar.metric("ISR",            "87.6%")
-st.sidebar.metric("SHAP Speedup",   "11,635×")
-st.sidebar.markdown("---")
-st.sidebar.markdown("[📂 GitHub](https://github.com/getaye21/lcga-self-healing-ids)")
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# MAIN TITLE
-# ═══════════════════════════════════════════════════════════════════════════════
-st.title("🛡️ LCGA Self-Healing IDS — Scientific Dashboard")
-st.markdown(
-    "**Lightweight CNN-GRU-Attention · SHAP Explainability · MAPE-K Closed-Loop Remediation**  \n"
-    "*MSc ML Thesis, Department of Computer Science, Addis Ababa University, June 2026*"
+st.sidebar.markdown("""
+<div style="background:#1f3864;border-radius:8px;padding:12px 14px;color:white;font-size:13px;line-height:1.7">
+<b>MSc ML Thesis</b><br>
+Addis Ababa University<br>
+<span style="opacity:0.85">Department of Computer Science</span>
+<hr style="border-color:rgba(255,255,255,0.25);margin:8px 0">
+<b>Researchers</b><br>
+📧 <a href="mailto:getayefiseha21@gmail.com" style="color:#a8c8ff">Getaye Fiseha</a><br>
+📧 <a href="mailto:mercyget36@gmail.com" style="color:#a8c8ff">Mersen Getu</a><br>
+📧 <a href="mailto:charagirmish03@gmail.com" style="color:#a8c8ff">Chara Girma</a>
+<hr style="border-color:rgba(255,255,255,0.25);margin:8px 0">
+<b>Advisor</b><br>
+📧 <a href="mailto:yaregal.assabie@aau.edu.et" style="color:#a8c8ff">Dr. Yaregal Assabie</a><br>
+<span style="opacity:0.75">yaregal.assabie@aau.edu.et</span>
+<hr style="border-color:rgba(255,255,255,0.25);margin:8px 0">
+<span style="opacity:0.75">📅 June 2026</span>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🏆 Key Results")
+st.sidebar.metric("Accuracy",       "99.67%", delta="+0.14% vs RF")
+st.sidebar.metric("MTTR Reduction", "87%",    delta="78.4s vs 598.5s")
+st.sidebar.metric("ISR",            "87.6%",  delta="+23.4pp vs rule-based")
+st.sidebar.metric("SHAP Speedup",   "11,635×",delta="vs LIME")
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    "[![GitHub](https://img.shields.io/badge/GitHub-View_Repo-181717?logo=github)](https://github.com/getaye21/lcga-self-healing-ids)"
 )
+
+# ── Hero banner ───────────────────────────────────────────────────────────────
+st.markdown("""
+<div style="
+  background:linear-gradient(135deg,#1f3864 0%,#2e5496 60%,#4472c4 100%);
+  border-radius:14px;padding:28px 36px;margin-bottom:18px;color:white;
+  box-shadow:0 4px 18px rgba(31,56,100,0.25)">
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+    <span style="font-size:2.6rem">🛡️</span>
+    <div>
+      <h1 style="color:white!important;margin:0;font-size:1.9rem;font-weight:800;
+                 letter-spacing:-0.5px">
+        LCGA Self-Healing IDS
+      </h1>
+      <p style="color:rgba(255,255,255,0.82);margin:0;font-size:1.0rem">
+        Lightweight CNN-GRU-Attention &nbsp;·&nbsp; SHAP Explainability &nbsp;·&nbsp; MAPE-K Closed-Loop Remediation
+      </p>
+    </div>
+  </div>
+  <hr style="border-color:rgba(255,255,255,0.25);margin:10px 0">
+  <div style="display:flex;flex-wrap:wrap;gap:28px;font-size:0.88rem;
+              color:rgba(255,255,255,0.88)">
+    <span>🎓 <b>MSc ML Thesis</b> &nbsp;—&nbsp; Addis Ababa University</span>
+    <span>👥 <a href="mailto:getayefiseha21@gmail.com" style="color:#a8c8ff;text-decoration:none">
+              Getaye Fiseha</a> &nbsp;·&nbsp;
+          <a href="mailto:mercyget36@gmail.com" style="color:#a8c8ff;text-decoration:none">
+              Mersen Getu</a> &nbsp;·&nbsp;
+          <a href="mailto:charagirmish03@gmail.com" style="color:#a8c8ff;text-decoration:none">
+              Chara Girma</a></span>
+    <span>🧑‍🏫 Advisor: <a href="mailto:yaregal.assabie@aau.edu.et"
+              style="color:#a8c8ff;text-decoration:none">Dr. Yaregal Assabie</a></span>
+    <span>📅 June 2026</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ── Live KPI strip ────────────────────────────────────────────────────────────
+k1, k2, k3, k4, k5 = st.columns(5)
+k1.metric("🎯 Accuracy",        "99.67%",   "+0.14% vs RF")
+k2.metric("⚡ Inference",       "1.85 ms",  "CPU, per flow")
+k3.metric("🔄 MTTR Reduction",  "87%",      "78.4s vs 598.5s")
+k4.metric("✅ ISR",             "87.6%",    "+23.4pp vs rule-based")
+k5.metric("🧠 SHAP Speed",      "11,635×",  "faster than LIME")
+st.markdown("---")
 
 # ── 8 tabs matching the original structure ────────────────────────────────────
 tabs = st.tabs([
@@ -644,7 +693,7 @@ with tabs[4]:
             "Sample":          [f"Sample {i+1}" for i in range(len(X))],
             "Predicted Class": preds,
             "Confidence":      [f"{probas[i].max():.1%}" for i in range(len(X))],
-            "Action":          [ACTION_MAP.get(p, "ESCALATE") for p in preds],
+            "Action":          [ACTION_MAP.get(p, "ESCALATE") if p != "BENIGN" else "—" for p in preds],
         })
         st.dataframe(pred_df, use_container_width=True)
 
@@ -853,6 +902,6 @@ self-healing for network security.
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.caption(
-    "LCGA Self-Healing IDS v3.0 · MSc ML Thesis, Addis Ababa University, June 2026 · "
+    "LCGA Self-Healing IDS v3.0 · MSc Thesis, Addis Ababa University, June 2026 · "
     "[GitHub](https://github.com/getaye21/lcga-self-healing-ids)"
 )
