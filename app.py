@@ -1,6 +1,6 @@
 """
 LCGA Self-Healing IDS - Scientific Dashboard with Live Inference (DT Surrogate)
-MSc Thesis | Addis Ababa University
+MSc ML Thesis | Addis Ababa University
 """
 import streamlit as st
 import pandas as pd
@@ -14,26 +14,90 @@ import shap
 
 st.set_page_config(page_title="LCGA IDS", page_icon="🛡️", layout="wide")
 
-# ---- Dark-Blue Theme with Visible Text ----
+# ========== Light Theme (White Background) ==========
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(135deg, #0b1a30, #1a3350, #0d2540); }
-    html, body, .stMarkdown, .stText, .stDataFrame, .stTable, .stCaption, .stMetric label { color: #e0e8f0 !important; }
-    h1, h2, h3, h4 { color: #5cb8e6 !important; }
-    .main-header { font-size: 2.8rem; font-weight: 800; color: #5cb8e6; text-align: center; margin-bottom: 0.3rem; }
-    .sub-header { font-size: 1.2rem; color: #a0c4e8; text-align: center; margin-bottom: 2rem; }
-    .card { background: rgba(30, 50, 80, 0.85); backdrop-filter: blur(10px); border-radius: 16px; padding: 1.5rem; margin: 0.8rem 0; border: 1px solid rgba(92, 184, 230, 0.3); color: #e0e8f0; }
-    .card-blue { border-left: 4px solid #3498db; } .card-green { border-left: 4px solid #2ecc71; }
-    .card-orange { border-left: 4px solid #f39c12; } .card-purple { border-left: 4px solid #9b59b6; }
-    .stButton>button { background: linear-gradient(90deg, #3498db, #2980b9); color: white; border: none; border-radius: 12px; font-weight: 600; padding: 0.6rem 2rem; transition: all 0.3s; }
-    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
-    .stTabs [data-baseweb="tab"] { border-radius: 8px 8px 0 0; padding: 10px 20px; background: rgba(52,152,219,0.1); color: #a0c4e8; }
-    .stTabs [aria-selected="true"] { background: rgba(52,152,219,0.25) !important; color: #5cb8e6 !important; }
-    .stMetric { background: rgba(52,152,219,0.15); border-radius: 12px; padding: 1rem; }
-    .stDataFrame { color: #e0e8f0 !important; }
-    .stDataFrame th { background: rgba(52,152,219,0.3) !important; color: #e0e8f0 !important; }
-    .stDataFrame td { background: rgba(20,35,55,0.6) !important; color: #e0e8f0 !important; }
-    .stAlert { color: #1a1a1a !important; }
+    /* Main background white */
+    .stApp {
+        background: #ffffff;
+    }
+    /* All text dark for contrast */
+    html, body, .stMarkdown, .stText, .stDataFrame, .stTable, .stCaption, .stMetric label {
+        color: #1e2a3a !important;
+    }
+    h1, h2, h3, h4 {
+        color: #1f6392 !important;
+    }
+    .main-header {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #1f6392;
+        text-align: center;
+        margin-bottom: 0.3rem;
+    }
+    .sub-header {
+        font-size: 1.2rem;
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .card {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 0.8rem 0;
+        border: 1px solid #cbd5e1;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        color: #1e2a3a;
+    }
+    .card-blue { border-left: 4px solid #3498db; }
+    .card-green { border-left: 4px solid #2ecc71; }
+    .card-orange { border-left: 4px solid #f39c12; }
+    .card-purple { border-left: 4px solid #9b59b6; }
+    .stButton>button {
+        background: linear-gradient(90deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.6rem 2rem;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(52,152,219,0.4);
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        background: #eef2f5;
+        color: #1e2a3a;
+    }
+    .stTabs [aria-selected="true"] {
+        background: #d4e6f1 !important;
+        color: #1f6392 !important;
+        font-weight: 600;
+    }
+    .stMetric {
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    .stDataFrame th {
+        background: #e2e8f0 !important;
+        color: #1e2a3a !important;
+    }
+    .stDataFrame td {
+        background: #ffffff !important;
+        color: #1e2a3a !important;
+    }
+    .stAlert {
+        color: #1e2a3a !important;
+    }
+    /* Fix for SHAP plot (force_plot may use dark background by default) */
+    .shap-force-plot {
+        background: white !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -100,18 +164,20 @@ def load_image(path):
     return None
 
 # ---------- Sidebar ----------
-st.sidebar.markdown("<h2 style='color:#5cb8e6;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color:#a0c4e8;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
+st.sidebar.markdown("<h2 style='color:#1f6392;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='color:#2c3e50;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
 st.sidebar.markdown("---")
-st.sidebar.info("Done by **Getaye Fiseha**, **Mersen Getu** and **Chara Girma** at Addis Ababa University\n\nAdvised by **Dr. Yaregal A.**\n\n© 2026 LCGA Framework")
+st.sidebar.info("**Getaye Fiseha**, **Mersen Getu**, **Chara Girma**\nAddis Ababa University\nAdvisor: Dr. Yaregal A.\n© 2026 LCGA Framework")
 
 # ---------- Load models ----------
 dt, le, feature_names = load_surrogate()
 models_loaded = (dt is not None)
 if models_loaded:
     shap_explainer = load_shap_explainer(dt)
+    n_features = len(feature_names)   # should be 73
 else:
     st.warning("Models not loaded. Upload joblib‑saved files to `models/`.")
+    n_features = 73
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
@@ -199,33 +265,64 @@ with tabs[2]:
     else: st.info("Upload `results/system_comparison.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 3: Live Detection ---
+# --- TAB 3: Live Detection (ROBUST CSV HANDLING) ---
 with tabs[3]:
     st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
-    if not models_loaded: st.warning("Models not loaded.")
+    if not models_loaded:
+        st.warning("Models not loaded.")
     else:
         col1, col2 = st.columns(2)
-        with col1: uploaded_file = st.file_uploader("Upload CSV", type="csv")
-        with col2: use_random = st.button("Use random test sample")
+        with col1:
+            uploaded_file = st.file_uploader("Upload CSV", type="csv")
+        with col2:
+            use_random = st.button("Use random test sample")
+
         input_data = None
         if uploaded_file is not None:
             try:
-                df_in = pd.read_csv(uploaded_file)
-                if set(feature_names).issubset(set(df_in.columns)):
-                    input_data = df_in[feature_names].values.astype(np.float32)
-                    st.success(f"Loaded {len(input_data)} flow(s)")
-                else: st.error("CSV must contain all expected features.")
-            except Exception as e: st.error(f"Error: {e}")
+                df_raw = pd.read_csv(uploaded_file)
+
+                # 1. Drop 'Label' column if it exists (not a feature)
+                if 'Label' in df_raw.columns:
+                    df_raw = df_raw.drop('Label', axis=1)
+
+                # 2. Normalise column names: strip spaces, lower case
+                df_raw.columns = df_raw.columns.str.strip().str.lower()
+                required = [f.lower().strip() for f in feature_names]
+
+                # 3. Identify missing columns
+                missing = [c for c in required if c not in df_raw.columns]
+                if missing:
+                    st.warning(f"Missing {len(missing)} feature(s). Filling with 0.")
+                    for col in missing:
+                        df_raw[col] = 0.0
+
+                # 4. Reorder columns to match required order
+                df_raw = df_raw[required]
+
+                # 5. Convert to float32
+                input_data = df_raw.values.astype(np.float32)
+                st.success(f"Loaded {len(input_data)} flow(s) | Features: {input_data.shape[1]}")
+
+            except Exception as e:
+                st.error(f"Error processing CSV: {e}")
+
         if use_random:
             np.random.seed(int(time.time()))
-            input_data = np.random.randn(5, 73).astype(np.float32)
+            input_data = np.random.randn(5, n_features).astype(np.float32)
+
         if input_data is not None:
+            # Predict
             preds = dt.predict(input_data)
             confidences = np.max(dt.predict_proba(input_data), axis=1)
             labels = le.inverse_transform(preds)
+
             st.subheader("Predictions")
-            for i, (lbl, conf) in enumerate(zip(labels, confidences)): st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
+            for i, (lbl, conf) in enumerate(zip(labels, confidences)):
+                st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
+
+            # SHAP explanation for first sample
             st.subheader("SHAP Explanation (first sample)")
             shap_vals = shap_explainer.shap_values(input_data[0:1])
             if isinstance(shap_vals, list):
@@ -234,10 +331,16 @@ with tabs[3]:
             else:
                 sv = shap_vals[0]
                 expected = shap_explainer.expected_value
-            fig = shap.force_plot(expected, sv, input_data[0], feature_names=feature_names, matplotlib=True, show=False)
+
+            fig = shap.force_plot(expected, sv, input_data[0],
+                                  feature_names=feature_names,
+                                  matplotlib=True, show=False)
             st.pyplot(fig)
-            st.subheader("Decision Rule Path")
+
+            # Decision tree rules (first few levels)
+            st.subheader("Decision Tree Rule Path (first 5 levels)")
             st.code(export_text(dt, feature_names=list(feature_names), max_depth=5)[:1200])
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- TAB 4: Self-Healing Simulator ---
@@ -269,23 +372,33 @@ with tabs[4]:
 with tabs[5]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
-    if not models_loaded: st.warning("Models not loaded.")
+    if not models_loaded:
+        st.warning("Models not loaded.")
     else:
         uploaded_single = st.file_uploader("Upload single flow CSV", type="csv", key="single")
         if uploaded_single is not None:
             df_single = pd.read_csv(uploaded_single)
-            if set(feature_names).issubset(set(df_single.columns)):
-                x = df_single[feature_names].values.astype(np.float32).reshape(1,-1)
-                pred = dt.predict(x)
-                cls = pred[0]
-                st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
-                shap_vals = shap_explainer.shap_values(x)
-                if isinstance(shap_vals, list):
-                    fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0], feature_names=feature_names, matplotlib=True, show=False)
-                else:
-                    fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0], x[0], feature_names=feature_names, matplotlib=True, show=False)
-                st.pyplot(fig)
-            else: st.error("CSV missing required features.")
+            # Normalise columns similarly
+            df_single.columns = df_single.columns.str.strip().str.lower()
+            required_lower = [f.lower().strip() for f in feature_names]
+            missing = [c for c in required_lower if c not in df_single.columns]
+            if missing:
+                st.warning(f"Missing {len(missing)} features. Filling with 0.")
+                for col in missing:
+                    df_single[col] = 0.0
+            df_single = df_single[required_lower]
+            x = df_single.values.astype(np.float32).reshape(1, -1)
+            pred = dt.predict(x)
+            cls = pred[0]
+            st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
+            shap_vals = shap_explainer.shap_values(x)
+            if isinstance(shap_vals, list):
+                fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0],
+                                      feature_names=feature_names, matplotlib=True, show=False)
+            else:
+                fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0], x[0],
+                                      feature_names=feature_names, matplotlib=True, show=False)
+            st.pyplot(fig)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- TAB 6: Action Log ---
