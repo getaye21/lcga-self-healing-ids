@@ -103,8 +103,7 @@ st.markdown(f"""
         transform: translateY(-2px);
         box-shadow: 0 6px 14px rgba(31,78,121,0.3);
     }}
-    /* Force plots background (if any) */
-    .shap-force-plot {{
+    .shap-plot {{
         background: {AAU_WHITE} !important;
     }}
 </style>
@@ -335,16 +334,14 @@ with tabs[3]:
             for i, (lbl, conf) in enumerate(zip(labels, confidences)):
                 st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
 
-            # --- SHAP explanation as bar chart (avoid force plot errors) ---
+            # --- SHAP bar chart (robust) ---
             st.subheader("SHAP Feature Importance (first sample)")
-            shap_vals = shap_explainer.shap_values(input_data[0:1])
+            shap_vals_all = shap_explainer.shap_values(input_data[0:1])  # list of arrays
             cls_idx = preds[0]
-            if isinstance(shap_vals, list):
-                sv = shap_vals[cls_idx][0]   # shap values for the predicted class
-            else:
-                sv = shap_vals[0]
-
-            # Create a DataFrame of feature names and SHAP values
+            # shap_vals_all[cls_idx] has shape (1, n_features)
+            sv_2d = shap_vals_all[cls_idx]        # 2D array (1, 73)
+            sv = sv_2d[0]                         # 1D array (73,)
+            # Create DataFrame
             shap_df = pd.DataFrame({
                 'feature': feature_names,
                 'shap_value': sv
@@ -409,11 +406,9 @@ with tabs[5]:
             pred = dt.predict(x)
             cls = pred[0]
             st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
-            shap_vals = shap_explainer.shap_values(x)
-            if isinstance(shap_vals, list):
-                sv = shap_vals[cls][0]
-            else:
-                sv = shap_vals[0]
+            shap_vals_all = shap_explainer.shap_values(x)
+            sv_2d = shap_vals_all[cls]     # (1, 73)
+            sv = sv_2d[0]                  # (73,)
             shap_df = pd.DataFrame({
                 'feature': feature_names,
                 'shap_value': sv
