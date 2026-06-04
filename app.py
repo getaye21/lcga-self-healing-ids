@@ -14,97 +14,59 @@ import shap
 
 st.set_page_config(page_title="LCGA IDS", page_icon="🛡️", layout="wide")
 
-# ========== Light Theme (White Background) ==========
+# ========== Light Theme ==========
 st.markdown("""
 <style>
-    /* Main background white */
-    .stApp {
-        background: #ffffff;
-    }
-    /* All text dark for contrast */
+    .stApp { background: #ffffff; }
     html, body, .stMarkdown, .stText, .stDataFrame, .stTable, .stCaption, .stMetric label {
         color: #1e2a3a !important;
     }
-    h1, h2, h3, h4 {
-        color: #1f6392 !important;
-    }
-    .main-header {
-        font-size: 2.8rem;
-        font-weight: 800;
-        color: #1f6392;
-        text-align: center;
-        margin-bottom: 0.3rem;
-    }
-    .sub-header {
-        font-size: 1.2rem;
-        color: #2c3e50;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .card {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin: 0.8rem 0;
-        border: 1px solid #cbd5e1;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        color: #1e2a3a;
-    }
+    h1, h2, h3, h4 { color: #1f6392 !important; }
+    .main-header { font-size: 2.8rem; font-weight: 800; color: #1f6392; text-align: center; margin-bottom: 0.3rem; }
+    .sub-header { font-size: 1.2rem; color: #2c3e50; text-align: center; margin-bottom: 2rem; }
+    .card { background: #f8fafc; border-radius: 16px; padding: 1.5rem; margin: 0.8rem 0; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); color: #1e2a3a; }
     .card-blue { border-left: 4px solid #3498db; }
     .card-green { border-left: 4px solid #2ecc71; }
     .card-orange { border-left: 4px solid #f39c12; }
     .card-purple { border-left: 4px solid #9b59b6; }
-    .stButton>button {
-        background: linear-gradient(90deg, #3498db, #2980b9);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        font-weight: 600;
-        padding: 0.6rem 2rem;
-        transition: all 0.3s;
-    }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(52,152,219,0.4);
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 8px 8px 0 0;
-        padding: 10px 20px;
-        background: #eef2f5;
-        color: #1e2a3a;
-    }
-    .stTabs [aria-selected="true"] {
-        background: #d4e6f1 !important;
-        color: #1f6392 !important;
-        font-weight: 600;
-    }
-    .stMetric {
-        background: #f1f5f9;
-        border-radius: 12px;
-        padding: 1rem;
-    }
-    .stDataFrame th {
-        background: #e2e8f0 !important;
-        color: #1e2a3a !important;
-    }
-    .stDataFrame td {
-        background: #ffffff !important;
-        color: #1e2a3a !important;
-    }
-    .stAlert {
-        color: #1e2a3a !important;
-    }
-    /* Fix for SHAP plot (force_plot may use dark background by default) */
-    .shap-force-plot {
-        background: white !important;
-    }
+    .stButton>button { background: linear-gradient(90deg, #3498db, #2980b9); color: white; border: none; border-radius: 12px; font-weight: 600; padding: 0.6rem 2rem; transition: all 0.3s; }
+    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
+    .stTabs [data-baseweb="tab"] { border-radius: 8px 8px 0 0; padding: 10px 20px; background: #eef2f5; color: #1e2a3a; }
+    .stTabs [aria-selected="true"] { background: #d4e6f1 !important; color: #1f6392 !important; font-weight: 600; }
+    .stMetric { background: #f1f5f9; border-radius: 12px; padding: 1rem; }
+    .stDataFrame th { background: #e2e8f0 !important; color: #1e2a3a !important; }
+    .stDataFrame td { background: #ffffff !important; color: #1e2a3a !important; }
+    .shap-force-plot { background: white !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# ---------- Define the EXACT 73 features your DT expects ----------
+EXPECTED_FEATURES_73 = [
+    "Destination Port", "Flow Duration", "Total Fwd Packets", "Total Backward Packets",
+    "Total Length of Fwd Packets", "Total Length of Bwd Packets", "Fwd Packet Length Max",
+    "Fwd Packet Length Min", "Fwd Packet Length Mean", "Fwd Packet Length Std",
+    "Bwd Packet Length Max", "Bwd Packet Length Min", "Bwd Packet Length Mean",
+    "Bwd Packet Length Std", "Flow Bytes/s", "Flow Packets/s", "Flow IAT Mean",
+    "Flow IAT Std", "Flow IAT Max", "Flow IAT Min", "Fwd IAT Total", "Fwd IAT Mean",
+    "Fwd IAT Std", "Fwd IAT Max", "Fwd IAT Min", "Bwd IAT Total", "Bwd IAT Mean",
+    "Bwd IAT Std", "Bwd IAT Max", "Bwd IAT Min", "Fwd PSH Flags", "Fwd URG Flags",
+    "Fwd Header Length", "Bwd Header Length", "Fwd Packets/s", "Bwd Packets/s",
+    "Min Packet Length", "Max Packet Length", "Packet Length Mean", "Packet Length Std",
+    "Packet Length Variance", "FIN Flag Count", "SYN Flag Count", "RST Flag Count",
+    "PSH Flag Count", "ACK Flag Count", "URG Flag Count", "CWE Flag Count",
+    "ECE Flag Count", "Down/Up Ratio", "Average Packet Size", "Avg Fwd Segment Size",
+    "Avg Bwd Segment Size", "Fwd Header Length.1", "Subflow Fwd Packets",
+    "Subflow Fwd Bytes", "Subflow Bwd Packets", "Subflow Bwd Bytes",
+    "Init_Win_bytes_forward", "Init_Win_bytes_backward", "act_data_pkt_fwd",
+    "min_seg_size_forward", "Active Mean", "Active Std", "Active Max", "Active Min",
+    "Idle Mean", "Idle Std", "Idle Max", "Idle Min", "avg_packet_size",
+    "fwd_pkt_range", "bwd_pkt_range"
+]
 
 # ---------- Cache helpers ----------
 @st.cache_resource
 def load_surrogate():
-    """Load DT surrogate and label encoder via joblib. Feature names are embedded."""
+    """Load DT surrogate and label encoder. Use the correct 73‑feature list."""
     try:
         dt = joblib.load("models/dt_surrogate.pkl")
         le = joblib.load("models/cic_label_enc.pkl")
@@ -112,30 +74,8 @@ def load_surrogate():
         st.error(f"Model loading failed: {e}")
         return None, None, None
 
-    feature_names = [
-        "Destination Port","Flow Duration","Total Fwd Packets","Total Backward Packets",
-        "Total Length of Fwd Packets","Total Length of Bwd Packets","Fwd Packet Length Max",
-        "Fwd Packet Length Min","Fwd Packet Length Mean","Fwd Packet Length Std",
-        "Bwd Packet Length Max","Bwd Packet Length Min","Bwd Packet Length Mean",
-        "Bwd Packet Length Std","Flow Bytes/s","Flow Packets/s","Flow IAT Mean",
-        "Flow IAT Std","Flow IAT Max","Flow IAT Min","Fwd IAT Total","Fwd IAT Mean",
-        "Fwd IAT Std","Fwd IAT Max","Fwd IAT Min","Bwd IAT Total","Bwd IAT Mean",
-        "Bwd IAT Std","Bwd IAT Max","Bwd IAT Min","Fwd PSH Flags","Bwd PSH Flags",
-        "Fwd URG Flags","Bwd URG Flags","Fwd Header Length","Bwd Header Length",
-        "Fwd Packets/s","Bwd Packets/s","Min Packet Length","Max Packet Length",
-        "Packet Length Mean","Packet Length Std","Packet Length Variance",
-        "FIN Flag Count","SYN Flag Count","RST Flag Count","PSH Flag Count",
-        "ACK Flag Count","URG Flag Count","CWE Flag Count","ECE Flag Count",
-        "Down/Up Ratio","Average Packet Size","Avg Fwd Segment Size","Avg Bwd Segment Size",
-        "Fwd Header Length.1","Fwd Avg Bytes/Bulk","Fwd Avg Packets/Bulk",
-        "Fwd Avg Bulk Rate","Bwd Avg Bytes/Bulk","Bwd Avg Packets/Bulk",
-        "Bwd Avg Bulk Rate","Subflow Fwd Packets","Subflow Fwd Bytes",
-        "Subflow Bwd Packets","Subflow Bwd Bytes","Init_Win_bytes_forward",
-        "Init_Win_bytes_backward","act_data_pkt_fwd","min_seg_size_forward",
-        "Active Mean","Active Std","Active Max","Active Min","Idle Mean",
-        "Idle Std","Idle Max","Idle Min"
-    ]
-    return dt, le, feature_names
+    # Use the 73‑feature list (not the old 78)
+    return dt, le, EXPECTED_FEATURES_73
 
 @st.cache_resource
 def load_shap_explainer(_dt):
@@ -163,6 +103,22 @@ def load_image(path):
     except Exception: pass
     return None
 
+# ---------- Helper: align any DataFrame to expected 73 features ----------
+def align_to_73_features(df):
+    """Keep only expected columns, add missing with 0, reorder."""
+    # Normalise column names (strip spaces, keep case as in list)
+    df.columns = df.columns.str.strip()
+    missing = [col for col in EXPECTED_FEATURES_73 if col not in df.columns]
+    if missing:
+        st.warning(f"Missing {len(missing)} feature(s). Filling with 0.")
+        for col in missing:
+            df[col] = 0.0
+    # Keep only expected columns (drop extras)
+    df = df[[col for col in EXPECTED_FEATURES_73 if col in df.columns]]
+    # Reorder to match exactly
+    df = df[EXPECTED_FEATURES_73]
+    return df
+
 # ---------- Sidebar ----------
 st.sidebar.markdown("<h2 style='color:#1f6392;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
 st.sidebar.markdown("<p style='color:#2c3e50;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
@@ -183,14 +139,14 @@ else:
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-header'>Lightweight Hybrid Deep Learning for Real-Time Threat Detection &amp; Intent-Aware Remediation</div>", unsafe_allow_html=True)
 
-# ---------- Tabs ----------
+# ---------- Tabs (unchanged except Live Detection) ----------
 tabs = st.tabs([
     "📖 Overview", "⚙️ Methodology", "📊 Results",
     "🧠 Live Detection", "🩺 Simulator",
     "🔍 Explainability", "📋 Action Log", "📜 Conclusions"
 ])
 
-# --- TAB 0: Overview ---
+# --- TAB 0: Overview (unchanged) ---
 with tabs[0]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Problem & Motivation")
@@ -209,7 +165,7 @@ with tabs[0]:
 4. **Fully Reproducible** – Open‑source code, data, experiments""")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 1: Methodology ---
+# --- TAB 1: Methodology (unchanged) ---
 with tabs[1]:
     col1, col2 = st.columns(2)
     with col1:
@@ -228,7 +184,7 @@ with tabs[1]:
 5. **Knowledge** – verify intent restoration, update success rates""")
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 2: Results ---
+# --- TAB 2: Results (unchanged) ---
 with tabs[2]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Model Comparison")
@@ -265,7 +221,7 @@ with tabs[2]:
     else: st.info("Upload `results/system_comparison.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 3: Live Detection (ROBUST CSV HANDLING) ---
+# --- TAB 3: Live Detection (AUTO‑ALIGNED to 73 features) ---
 with tabs[3]:
     st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
@@ -283,27 +239,20 @@ with tabs[3]:
             try:
                 df_raw = pd.read_csv(uploaded_file)
 
-                # 1. Drop 'Label' column if it exists (not a feature)
+                # Drop any non‑feature columns like 'Label'
                 if 'Label' in df_raw.columns:
                     df_raw = df_raw.drop('Label', axis=1)
 
-                # 2. Normalise column names: strip spaces, lower case
-                df_raw.columns = df_raw.columns.str.strip().str.lower()
-                required = [f.lower().strip() for f in feature_names]
+                # Normalise column names: strip spaces (case-sensitive matching with EXPECTED_FEATURES_73)
+                df_raw.columns = df_raw.columns.str.strip()
 
-                # 3. Identify missing columns
-                missing = [c for c in required if c not in df_raw.columns]
-                if missing:
-                    st.warning(f"Missing {len(missing)} feature(s). Filling with 0.")
-                    for col in missing:
-                        df_raw[col] = 0.0
+                # Align to 73 features (adds missing with 0, drops extras, reorders)
+                df_aligned = align_to_73_features(df_raw)
+                st.success(f"Aligned shape: {df_aligned.shape[1]} features (expected 73)")
 
-                # 4. Reorder columns to match required order
-                df_raw = df_raw[required]
-
-                # 5. Convert to float32
-                input_data = df_raw.values.astype(np.float32)
-                st.success(f"Loaded {len(input_data)} flow(s) | Features: {input_data.shape[1]}")
+                # Convert to float32
+                input_data = df_aligned.values.astype(np.float32)
+                st.info(f"Loaded {len(input_data)} flow(s) | Features: {input_data.shape[1]}")
 
             except Exception as e:
                 st.error(f"Error processing CSV: {e}")
@@ -343,7 +292,7 @@ with tabs[3]:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 4: Self-Healing Simulator ---
+# --- TAB 4: Self-Healing Simulator (unchanged) ---
 with tabs[4]:
     st.markdown("<div class='card card-orange'>", unsafe_allow_html=True)
     st.subheader("MAPE‑K Self‑Healing Simulator")
@@ -368,7 +317,7 @@ with tabs[4]:
         col3.metric("Actions Executed", len(df))
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 5: Explainability Explorer ---
+# --- TAB 5: Explainability Explorer (uses 73 features) ---
 with tabs[5]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
@@ -378,16 +327,12 @@ with tabs[5]:
         uploaded_single = st.file_uploader("Upload single flow CSV", type="csv", key="single")
         if uploaded_single is not None:
             df_single = pd.read_csv(uploaded_single)
-            # Normalise columns similarly
-            df_single.columns = df_single.columns.str.strip().str.lower()
-            required_lower = [f.lower().strip() for f in feature_names]
-            missing = [c for c in required_lower if c not in df_single.columns]
-            if missing:
-                st.warning(f"Missing {len(missing)} features. Filling with 0.")
-                for col in missing:
-                    df_single[col] = 0.0
-            df_single = df_single[required_lower]
-            x = df_single.values.astype(np.float32).reshape(1, -1)
+            # Drop Label if present
+            if 'Label' in df_single.columns:
+                df_single = df_single.drop('Label', axis=1)
+            df_single.columns = df_single.columns.str.strip()
+            df_aligned = align_to_73_features(df_single)
+            x = df_aligned.values.astype(np.float32).reshape(1, -1)
             pred = dt.predict(x)
             cls = pred[0]
             st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
@@ -401,7 +346,7 @@ with tabs[5]:
             st.pyplot(fig)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 6: Action Log ---
+# --- TAB 6: Action Log (unchanged) ---
 with tabs[6]:
     st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
     st.subheader("MAPE‑K Action Log")
@@ -414,7 +359,7 @@ with tabs[6]:
     else: st.info("Upload `results/ablation_study.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 7: Conclusions ---
+# --- TAB 7: Conclusions (unchanged) ---
 with tabs[7]:
     st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
     st.subheader("Conclusions & Future Work")
