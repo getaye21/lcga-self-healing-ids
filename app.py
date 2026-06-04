@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 from PIL import Image
 import os, json, time
 import joblib
@@ -14,29 +15,107 @@ import shap
 
 st.set_page_config(page_title="LCGA IDS", page_icon="🛡️", layout="wide")
 
-# ========== Light Theme ==========
-st.markdown("""
+# ========== AAU Color Theme ==========
+AAU_BLUE = "#1f4e79"
+AAU_YELLOW = "#ffcd00"
+AAU_WHITE = "#ffffff"
+AAU_LIGHT_BG = "#f0f4f8"
+
+st.markdown(f"""
 <style>
-    .stApp { background: #ffffff; }
-    html, body, .stMarkdown, .stText, .stDataFrame, .stTable, .stCaption, .stMetric label {
-        color: #1e2a3a !important;
-    }
-    h1, h2, h3, h4 { color: #1f6392 !important; }
-    .main-header { font-size: 2.8rem; font-weight: 800; color: #1f6392; text-align: center; margin-bottom: 0.3rem; }
-    .sub-header { font-size: 1.2rem; color: #2c3e50; text-align: center; margin-bottom: 2rem; }
-    .card { background: #f8fafc; border-radius: 16px; padding: 1.5rem; margin: 0.8rem 0; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); color: #1e2a3a; }
-    .card-blue { border-left: 4px solid #3498db; }
-    .card-green { border-left: 4px solid #2ecc71; }
-    .card-orange { border-left: 4px solid #f39c12; }
-    .card-purple { border-left: 4px solid #9b59b6; }
-    .stButton>button { background: linear-gradient(90deg, #3498db, #2980b9); color: white; border: none; border-radius: 12px; font-weight: 600; padding: 0.6rem 2rem; transition: all 0.3s; }
-    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(52,152,219,0.4); }
-    .stTabs [data-baseweb="tab"] { border-radius: 8px 8px 0 0; padding: 10px 20px; background: #eef2f5; color: #1e2a3a; }
-    .stTabs [aria-selected="true"] { background: #d4e6f1 !important; color: #1f6392 !important; font-weight: 600; }
-    .stMetric { background: #f1f5f9; border-radius: 12px; padding: 1rem; }
-    .stDataFrame th { background: #e2e8f0 !important; color: #1e2a3a !important; }
-    .stDataFrame td { background: #ffffff !important; color: #1e2a3a !important; }
-    .shap-force-plot { background: white !important; }
+    /* Main background light */
+    .stApp {{
+        background: {AAU_LIGHT_BG};
+    }}
+    /* Sidebar styling - AAU blue gradient */
+    [data-testid="stSidebar"] {{
+        background: linear-gradient(135deg, {AAU_BLUE} 0%, #2c6e9e 100%);
+    }}
+    [data-testid="stSidebar"] * {{
+        color: {AAU_WHITE} !important;
+    }}
+    [data-testid="stSidebar"] .stMarkdown, 
+    [data-testid="stSidebar"] .stText,
+    [data-testid="stSidebar"] .stSelectbox label,
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] .stInfo,
+    [data-testid="stSidebar"] .stAlert,
+    [data-testid="stSidebar"] .stButton>button {{
+        color: {AAU_WHITE} !important;
+    }}
+    /* Sidebar button hover */
+    [data-testid="stSidebar"] .stButton>button:hover {{
+        background-color: {AAU_YELLOW} !important;
+        color: {AAU_BLUE} !important;
+        border: none;
+    }}
+    /* Main content cards */
+    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown {{
+        color: {AAU_BLUE};
+    }}
+    .card {{
+        background: {AAU_WHITE};
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 0.8rem 0;
+        border: 1px solid #d0d5dd;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        color: {AAU_BLUE};
+    }}
+    .card-blue {{ border-left: 6px solid {AAU_BLUE}; }}
+    .card-yellow {{ border-left: 6px solid {AAU_YELLOW}; }}
+    .main-header {{
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: {AAU_BLUE};
+        text-align: center;
+        margin-bottom: 0.3rem;
+        letter-spacing: -0.5px;
+    }}
+    .sub-header {{
+        font-size: 1.2rem;
+        color: {AAU_BLUE};
+        text-align: center;
+        margin-bottom: 2rem;
+        opacity: 0.8;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        background: #eef2f5;
+        color: {AAU_BLUE};
+    }}
+    .stTabs [aria-selected="true"] {{
+        background: {AAU_YELLOW} !important;
+        color: {AAU_BLUE} !important;
+        font-weight: 600;
+    }}
+    .stMetric {{
+        background: {AAU_WHITE};
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid #d0d5dd;
+    }}
+    .stButton>button {{
+        background: {AAU_BLUE};
+        color: {AAU_WHITE};
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.6rem 1.8rem;
+        transition: all 0.3s;
+    }}
+    .stButton>button:hover {{
+        background: {AAU_YELLOW};
+        color: {AAU_BLUE};
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(31,78,121,0.3);
+    }}
+    .shap-force-plot {{
+        background: {AAU_WHITE} !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -63,18 +142,28 @@ EXPECTED_FEATURES_73 = [
     "fwd_pkt_range", "bwd_pkt_range"
 ]
 
+# ---------- Helper: align any DataFrame to expected 73 features ----------
+def align_to_73_features(df):
+    """Keep only expected columns, add missing with 0, reorder."""
+    df.columns = df.columns.str.strip()
+    missing = [col for col in EXPECTED_FEATURES_73 if col not in df.columns]
+    if missing:
+        st.warning(f"Missing {len(missing)} feature(s). Filling with 0.")
+        for col in missing:
+            df[col] = 0.0
+    df = df[[col for col in EXPECTED_FEATURES_73 if col in df.columns]]
+    df = df[EXPECTED_FEATURES_73]
+    return df
+
 # ---------- Cache helpers ----------
 @st.cache_resource
 def load_surrogate():
-    """Load DT surrogate and label encoder. Use the correct 73‑feature list."""
     try:
         dt = joblib.load("models/dt_surrogate.pkl")
         le = joblib.load("models/cic_label_enc.pkl")
     except Exception as e:
         st.error(f"Model loading failed: {e}")
         return None, None, None
-
-    # Use the 73‑feature list (not the old 78)
     return dt, le, EXPECTED_FEATURES_73
 
 @st.cache_resource
@@ -85,68 +174,55 @@ def load_shap_explainer(_dt):
 def load_csv(path):
     try:
         if os.path.exists(path): return pd.read_csv(path)
-    except Exception: pass
-    return None
+    except Exception: return None
 
 @st.cache_data
 def load_json(path):
     if os.path.exists(path):
         try:
             with open(path) as f: return json.load(f)
-        except Exception: pass
+        except Exception: return None
     return None
 
 @st.cache_data
 def load_image(path):
     try:
         if os.path.exists(path): return Image.open(path)
-    except Exception: pass
-    return None
-
-# ---------- Helper: align any DataFrame to expected 73 features ----------
-def align_to_73_features(df):
-    """Keep only expected columns, add missing with 0, reorder."""
-    # Normalise column names (strip spaces, keep case as in list)
-    df.columns = df.columns.str.strip()
-    missing = [col for col in EXPECTED_FEATURES_73 if col not in df.columns]
-    if missing:
-        st.warning(f"Missing {len(missing)} feature(s). Filling with 0.")
-        for col in missing:
-            df[col] = 0.0
-    # Keep only expected columns (drop extras)
-    df = df[[col for col in EXPECTED_FEATURES_73 if col in df.columns]]
-    # Reorder to match exactly
-    df = df[EXPECTED_FEATURES_73]
-    return df
-
-# ---------- Sidebar ----------
-st.sidebar.markdown("<h2 style='color:#1f6392;'>🛡️ LCGA IDS</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("<p style='color:#2c3e50;'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
-st.sidebar.markdown("---")
-st.sidebar.info("**Getaye Fiseha**, **Mersen Getu**, **Chara Girma**\nAddis Ababa University\nAdvisor: Dr. Yaregal A.\n© 2026 LCGA Framework")
+    except Exception: return None
 
 # ---------- Load models ----------
 dt, le, feature_names = load_surrogate()
 models_loaded = (dt is not None)
 if models_loaded:
     shap_explainer = load_shap_explainer(dt)
-    n_features = len(feature_names)   # should be 73
+    n_features = len(feature_names)   # 73
 else:
-    st.warning("Models not loaded. Upload joblib‑saved files to `models/`.")
+    st.warning("Models not loaded. Place joblib files in `models/`.")
     n_features = 73
+
+# ---------- Sidebar (AAU themed) ----------
+with st.sidebar:
+    st.image("https://upload.wikimedia.org/wikipedia/en/thumb/3/33/Addis_Ababa_University_logo.png/150px-Addis_Ababa_University_logo.png", width=80)
+    st.markdown(f"<h2 style='color:{AAU_YELLOW}; margin-top:-10px;'>LCGA IDS</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:{AAU_WHITE};'><b>Intent-Aware Self-Healing Network</b></p>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.9rem;'><b>Researchers:</b><br>Getaye Fiseha<br>Mersen Getu<br>Chara Girma</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.9rem;'><b>Advisor:</b><br>Dr. Yaregal A.</p>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown(f"<p style='color:{AAU_WHITE}; font-size:0.8rem;'>© 2026 LCGA Framework<br>Addis Ababa University</p>", unsafe_allow_html=True)
 
 # ---------- Header ----------
 st.markdown("<div class='main-header'>🛡️ LCGA Self-Healing IDS</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-header'>Lightweight Hybrid Deep Learning for Real-Time Threat Detection &amp; Intent-Aware Remediation</div>", unsafe_allow_html=True)
 
-# ---------- Tabs (unchanged except Live Detection) ----------
+# ---------- Tabs ----------
 tabs = st.tabs([
     "📖 Overview", "⚙️ Methodology", "📊 Results",
     "🧠 Live Detection", "🩺 Simulator",
     "🔍 Explainability", "📋 Action Log", "📜 Conclusions"
 ])
 
-# --- TAB 0: Overview (unchanged) ---
+# --- TAB 0: Overview ---
 with tabs[0]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Problem & Motivation")
@@ -157,7 +233,7 @@ with tabs[0]:
 
 **Our solution**: An explainable, intent-aware deep-learning framework that autonomously detects, classifies, and remediates network attacks in real time.""")
     st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-yellow'>", unsafe_allow_html=True)
     st.subheader("Key Contributions")
     st.markdown("""1. **LCGA** – CNN‑GRU‑Attention with 41k params, 99.67% accuracy
 2. **DT Surrogate + SHAP** – Explanations 11,635× faster than LIME
@@ -165,7 +241,7 @@ with tabs[0]:
 4. **Fully Reproducible** – Open‑source code, data, experiments""")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 1: Methodology (unchanged) ---
+# --- TAB 1: Methodology ---
 with tabs[1]:
     col1, col2 = st.columns(2)
     with col1:
@@ -175,7 +251,7 @@ with tabs[1]:
         st.metric("Trainable Parameters", "41,260")
         st.markdown("</div>", unsafe_allow_html=True)
     with col2:
-        st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
+        st.markdown("<div class='card card-yellow'>", unsafe_allow_html=True)
         st.subheader("MAPE‑K Self‑Healing Loop")
         st.markdown("""1. **Monitor** – capture network telemetry
 2. **Analyze** – LCGA + DT surrogate + SHAP
@@ -184,38 +260,38 @@ with tabs[1]:
 5. **Knowledge** – verify intent restoration, update success rates""")
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 2: Results (unchanged) ---
+# --- TAB 2: Results ---
 with tabs[2]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Model Comparison")
     comp = load_csv("results/model_comparison.csv")
     if comp is not None:
         f1_cols = [c for c in comp.columns if "macro" in c.lower() and "f1" in c.lower()]
-        st.dataframe(comp.style.highlight_max(subset=f1_cols[:1] if f1_cols else [], color="#3498db", axis=0) if f1_cols else comp, use_container_width=True)
+        st.dataframe(comp.style.highlight_max(subset=f1_cols[:1] if f1_cols else [], color=AAU_BLUE, axis=0) if f1_cols else comp, use_container_width=True)
     else: st.info("Upload `results/model_comparison.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
     with col_a:
-        st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
+        st.markdown("<div class='card card-yellow'>", unsafe_allow_html=True)
         st.subheader("Training History")
         img = load_image("results/lcga_training_history.png")
         if img: st.image(img, use_column_width=True)
         else: st.info("Upload `results/lcga_training_history.png`")
         st.markdown("</div>", unsafe_allow_html=True)
     with col_b:
-        st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
+        st.markdown("<div class='card card-yellow'>", unsafe_allow_html=True)
         st.subheader("Confusion Matrix")
         img = load_image("results/lcga_confusion_matrix.png")
         if img: st.image(img, use_column_width=True)
         else: st.info("Upload `results/lcga_confusion_matrix.png`")
         st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("<div class='card card-orange'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("System Comparison")
     sys_df = load_csv("results/system_comparison.csv")
     if sys_df is not None:
         fig = go.Figure()
-        fig.add_trace(go.Bar(name="MTTR (s)", x=sys_df["System"], y=sys_df["MTTR_s"], marker_color=["#E24B4A","#854F0B","#3498db"]))
-        fig.add_trace(go.Bar(name="ISR (%)", x=sys_df["System"], y=sys_df["ISR_pct"], marker_color=["#E24B4A","#854F0B","#3498db"], visible=False))
+        fig.add_trace(go.Bar(name="MTTR (s)", x=sys_df["System"], y=sys_df["MTTR_s"], marker_color=[AAU_BLUE, "#854F0B", AAU_YELLOW]))
+        fig.add_trace(go.Bar(name="ISR (%)", x=sys_df["System"], y=sys_df["ISR_pct"], marker_color=[AAU_BLUE, "#854F0B", AAU_YELLOW], visible=False))
         fig.update_layout(barmode="group", updatemenus=[{"buttons":[{"label":"MTTR","method":"update","args":[{"visible":[True,False]}]},{"label":"ISR","method":"update","args":[{"visible":[False,True]}]}]}])
         st.plotly_chart(fig, use_container_width=True)
     else: st.info("Upload `results/system_comparison.csv`")
@@ -223,7 +299,7 @@ with tabs[2]:
 
 # --- TAB 3: Live Detection (AUTO‑ALIGNED to 73 features) ---
 with tabs[3]:
-    st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Live Network Flow Classification (DT Surrogate)")
     if not models_loaded:
         st.warning("Models not loaded.")
@@ -238,22 +314,12 @@ with tabs[3]:
         if uploaded_file is not None:
             try:
                 df_raw = pd.read_csv(uploaded_file)
-
-                # Drop any non‑feature columns like 'Label'
                 if 'Label' in df_raw.columns:
                     df_raw = df_raw.drop('Label', axis=1)
-
-                # Normalise column names: strip spaces (case-sensitive matching with EXPECTED_FEATURES_73)
-                df_raw.columns = df_raw.columns.str.strip()
-
-                # Align to 73 features (adds missing with 0, drops extras, reorders)
                 df_aligned = align_to_73_features(df_raw)
                 st.success(f"Aligned shape: {df_aligned.shape[1]} features (expected 73)")
-
-                # Convert to float32
                 input_data = df_aligned.values.astype(np.float32)
                 st.info(f"Loaded {len(input_data)} flow(s) | Features: {input_data.shape[1]}")
-
             except Exception as e:
                 st.error(f"Error processing CSV: {e}")
 
@@ -262,7 +328,6 @@ with tabs[3]:
             input_data = np.random.randn(5, n_features).astype(np.float32)
 
         if input_data is not None:
-            # Predict
             preds = dt.predict(input_data)
             confidences = np.max(dt.predict_proba(input_data), axis=1)
             labels = le.inverse_transform(preds)
@@ -271,30 +336,30 @@ with tabs[3]:
             for i, (lbl, conf) in enumerate(zip(labels, confidences)):
                 st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
 
-            # SHAP explanation for first sample
+            # SHAP explanation for first sample (fixed API)
             st.subheader("SHAP Explanation (first sample)")
             shap_vals = shap_explainer.shap_values(input_data[0:1])
+            cls_idx = preds[0]
             if isinstance(shap_vals, list):
-                sv = shap_vals[preds[0]][0]
-                expected = shap_explainer.expected_value[preds[0]]
+                sv = shap_vals[cls_idx][0]
+                expected = shap_explainer.expected_value[cls_idx]
             else:
                 sv = shap_vals[0]
                 expected = shap_explainer.expected_value
 
-            fig = shap.force_plot(expected, sv, input_data[0],
-                                  feature_names=feature_names,
-                                  matplotlib=True, show=False)
+            fig = shap.plots.force(expected, sv, input_data[0],
+                                   feature_names=feature_names,
+                                   matplotlib=True, show=False)
             st.pyplot(fig)
 
-            # Decision tree rules (first few levels)
             st.subheader("Decision Tree Rule Path (first 5 levels)")
             st.code(export_text(dt, feature_names=list(feature_names), max_depth=5)[:1200])
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 4: Self-Healing Simulator (unchanged) ---
+# --- TAB 4: Self-Healing Simulator ---
 with tabs[4]:
-    st.markdown("<div class='card card-orange'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-yellow'>", unsafe_allow_html=True)
     st.subheader("MAPE‑K Self‑Healing Simulator")
     if st.button("Run Simulation Cycle"):
         intents = {"I1":{"name":"HTTP Latency","t_verify":90},"I2":{"name":"SSH Availability","t_verify":60},"I3":{"name":"Auth Fail Rate","t_verify":60},"I4":{"name":"Port Scan Rate","t_verify":30},"I5":{"name":"Bandwidth","t_verify":90}}
@@ -317,7 +382,7 @@ with tabs[4]:
         col3.metric("Actions Executed", len(df))
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 5: Explainability Explorer (uses 73 features) ---
+# --- TAB 5: Explainability Explorer ---
 with tabs[5]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
@@ -327,7 +392,6 @@ with tabs[5]:
         uploaded_single = st.file_uploader("Upload single flow CSV", type="csv", key="single")
         if uploaded_single is not None:
             df_single = pd.read_csv(uploaded_single)
-            # Drop Label if present
             if 'Label' in df_single.columns:
                 df_single = df_single.drop('Label', axis=1)
             df_single.columns = df_single.columns.str.strip()
@@ -338,17 +402,17 @@ with tabs[5]:
             st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
             shap_vals = shap_explainer.shap_values(x)
             if isinstance(shap_vals, list):
-                fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0],
-                                      feature_names=feature_names, matplotlib=True, show=False)
+                fig = shap.plots.force(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0],
+                                       feature_names=feature_names, matplotlib=True, show=False)
             else:
-                fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0], x[0],
-                                      feature_names=feature_names, matplotlib=True, show=False)
+                fig = shap.plots.force(shap_explainer.expected_value, shap_vals[0], x[0],
+                                       feature_names=feature_names, matplotlib=True, show=False)
             st.pyplot(fig)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 6: Action Log (unchanged) ---
+# --- TAB 6: Action Log ---
 with tabs[6]:
-    st.markdown("<div class='card card-green'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("MAPE‑K Action Log")
     log_json = load_json("results/action_log_full.json")
     if log_json: st.dataframe(pd.DataFrame(log_json).head(30), use_container_width=True)
@@ -359,9 +423,9 @@ with tabs[6]:
     else: st.info("Upload `results/ablation_study.csv`")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 7: Conclusions (unchanged) ---
+# --- TAB 7: Conclusions ---
 with tabs[7]:
-    st.markdown("<div class='card card-purple'>", unsafe_allow_html=True)
+    st.markdown("<div class='card card-yellow'>", unsafe_allow_html=True)
     st.subheader("Conclusions & Future Work")
     st.markdown("""- **LCGA** achieves 99.67% accuracy with only 41k parameters.
 - **MAPE‑K orchestrator** delivers 87% MTTR reduction and 87.6% ISR.
