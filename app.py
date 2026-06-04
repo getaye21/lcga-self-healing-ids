@@ -335,23 +335,32 @@ with tabs[3]:
                 if cls_idx < len(shap_vals_all):
                     sv_2d = shap_vals_all[cls_idx]
                 else:
-                    # Fallback: use first class
                     sv_2d = shap_vals_all[0]
             else:
-                # Binary or single output: shap_vals_all is a 2D array (samples, features)
+                # Binary or single output
                 sv_2d = shap_vals_all
 
-            # Ensure it's 2D and extract first sample
+            # Ensure 2D and extract first sample, then flatten to 1D
             if sv_2d.ndim == 2:
-                sv = sv_2d[0]
+                sv = sv_2d[0]           # now shape (n_features,)
             else:
                 sv = sv_2d
+            # Force 1D
+            sv = np.ravel(sv)
 
-            # Create DataFrame
-            shap_df = pd.DataFrame({
-                'feature': feature_names,
-                'shap_value': sv
-            }).sort_values('shap_value', key=abs, ascending=False).head(15)
+            # Create DataFrame (sv length must equal len(feature_names))
+            if len(sv) != len(feature_names):
+                st.warning(f"SHAP value length mismatch: {len(sv)} vs {len(feature_names)}. Displaying available features.")
+                min_len = min(len(sv), len(feature_names))
+                shap_df = pd.DataFrame({
+                    'feature': feature_names[:min_len],
+                    'shap_value': sv[:min_len]
+                }).sort_values('shap_value', key=abs, ascending=False).head(15)
+            else:
+                shap_df = pd.DataFrame({
+                    'feature': feature_names,
+                    'shap_value': sv
+                }).sort_values('shap_value', key=abs, ascending=False).head(15)
 
             # Plot horizontal bar chart
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -424,9 +433,11 @@ with tabs[5]:
                 sv = sv_2d[0]
             else:
                 sv = sv_2d
+            sv = np.ravel(sv)
+            min_len = min(len(sv), len(feature_names))
             shap_df = pd.DataFrame({
-                'feature': feature_names,
-                'shap_value': sv
+                'feature': feature_names[:min_len],
+                'shap_value': sv[:min_len]
             }).sort_values('shap_value', key=abs, ascending=False).head(15)
             fig, ax = plt.subplots(figsize=(10, 6))
             colors = [AAU_BLUE if val >= 0 else AAU_YELLOW for val in shap_df['shap_value']]
