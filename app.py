@@ -25,7 +25,7 @@ DARK_TEXT = "#1e2a3a"
 st.markdown(f"""
 <style>
     .stApp {{ background: {AAU_LIGHT_BG}; }}
-    /* Sidebar */
+    /* Sidebar remains AAU blue with white text */
     [data-testid="stSidebar"] {{
         background: linear-gradient(135deg, {AAU_BLUE} 0%, #2c6e9e 100%);
     }}
@@ -41,8 +41,12 @@ st.markdown(f"""
         background-color: {AAU_YELLOW} !important;
         color: {AAU_BLUE} !important;
     }}
-    /* Main headers - dark text for readability */
-    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown {{ color: {DARK_TEXT}; }}
+    /* Main content: all text dark */
+    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown, 
+    .stApp p, .stApp label, .stApp .stText, .stApp .stMetric label,
+    .stApp .stDataFrame, .stApp .stTable, .stApp .stCaption {{
+        color: {DARK_TEXT} !important;
+    }}
     /* Card styling */
     .card {{
         background: {AAU_WHITE};
@@ -55,7 +59,6 @@ st.markdown(f"""
     }}
     .card-blue {{ border-left: 6px solid {AAU_BLUE}; }}
     .card-yellow {{ border-left: 6px solid {AAU_YELLOW}; }}
-    /* Main header style */
     .main-header {{
         font-size: 2.8rem;
         font-weight: 800;
@@ -70,7 +73,6 @@ st.markdown(f"""
         margin-bottom: 2rem;
         opacity: 0.8;
     }}
-    /* Tabs */
     .stTabs [data-baseweb="tab"] {{
         border-radius: 8px 8px 0 0;
         padding: 10px 20px;
@@ -103,19 +105,7 @@ st.markdown(f"""
         transform: translateY(-2px);
         box-shadow: 0 6px 14px rgba(31,78,121,0.3);
     }}
-    .shap-plot {{
-        background: {AAU_WHITE} !important;
-    }}
 </style>
-""", unsafe_allow_html=True)
-
-# ---------- Note about file upload limit ----------
-st.markdown("""
-<div style="background:#e8f0fe; padding:0.5rem; border-radius:8px; margin-bottom:1rem;">
-    ℹ️ <b>File upload limit:</b> Streamlit default is 200MB. To increase, create a folder <code>.streamlit</code> with <code>config.toml</code> containing:<br>
-    <code>[server]</code><br>
-    <code>maxUploadSize = 1024</code>  (size in MB)
-</div>
 """, unsafe_allow_html=True)
 
 # ---------- Define the EXACT 73 features ----------
@@ -334,13 +324,29 @@ with tabs[3]:
             for i, (lbl, conf) in enumerate(zip(labels, confidences)):
                 st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
 
-            # --- SHAP bar chart (robust) ---
+            # --- SHAP bar chart (robust for any output shape) ---
             st.subheader("SHAP Feature Importance (first sample)")
-            shap_vals_all = shap_explainer.shap_values(input_data[0:1])  # list of arrays
+            shap_vals_all = shap_explainer.shap_values(input_data[0:1])
             cls_idx = preds[0]
-            # shap_vals_all[cls_idx] has shape (1, n_features)
-            sv_2d = shap_vals_all[cls_idx]        # 2D array (1, 73)
-            sv = sv_2d[0]                         # 1D array (73,)
+
+            # Handle different shap output formats
+            if isinstance(shap_vals_all, list):
+                # Multi-class: list of arrays, one per class
+                if cls_idx < len(shap_vals_all):
+                    sv_2d = shap_vals_all[cls_idx]
+                else:
+                    # Fallback: use first class
+                    sv_2d = shap_vals_all[0]
+            else:
+                # Binary or single output: shap_vals_all is a 2D array (samples, features)
+                sv_2d = shap_vals_all
+
+            # Ensure it's 2D and extract first sample
+            if sv_2d.ndim == 2:
+                sv = sv_2d[0]
+            else:
+                sv = sv_2d
+
             # Create DataFrame
             shap_df = pd.DataFrame({
                 'feature': feature_names,
@@ -388,7 +394,7 @@ with tabs[4]:
         col3.metric("Actions Executed", len(df))
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 5: Explainability Explorer (using bar chart) ---
+# --- TAB 5: Explainability Explorer ---
 with tabs[5]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
@@ -407,8 +413,17 @@ with tabs[5]:
             cls = pred[0]
             st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
             shap_vals_all = shap_explainer.shap_values(x)
-            sv_2d = shap_vals_all[cls]     # (1, 73)
-            sv = sv_2d[0]                  # (73,)
+            if isinstance(shap_vals_all, list):
+                if cls < len(shap_vals_all):
+                    sv_2d = shap_vals_all[cls]
+                else:
+                    sv_2d = shap_vals_all[0]
+            else:
+                sv_2d = shap_vals_all
+            if sv_2d.ndim == 2:
+                sv = sv_2d[0]
+            else:
+                sv = sv_2d
             shap_df = pd.DataFrame({
                 'feature': feature_names,
                 'shap_value': sv
