@@ -20,10 +20,12 @@ AAU_BLUE = "#1f4e79"
 AAU_YELLOW = "#ffcd00"
 AAU_WHITE = "#ffffff"
 AAU_LIGHT_BG = "#f0f4f8"
+DARK_TEXT = "#1e2a3a"
 
 st.markdown(f"""
 <style>
     .stApp {{ background: {AAU_LIGHT_BG}; }}
+    /* Sidebar */
     [data-testid="stSidebar"] {{
         background: linear-gradient(135deg, {AAU_BLUE} 0%, #2c6e9e 100%);
     }}
@@ -39,7 +41,9 @@ st.markdown(f"""
         background-color: {AAU_YELLOW} !important;
         color: {AAU_BLUE} !important;
     }}
-    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown {{ color: {AAU_BLUE}; }}
+    /* Main headers - dark text for readability */
+    .stApp h1, .stApp h2, .stApp h3, .stApp .stMarkdown {{ color: {DARK_TEXT}; }}
+    /* Card styling */
     .card {{
         background: {AAU_WHITE};
         border-radius: 16px;
@@ -47,10 +51,11 @@ st.markdown(f"""
         margin: 0.8rem 0;
         border: 1px solid #d0d5dd;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        color: {AAU_BLUE};
+        color: {DARK_TEXT};
     }}
     .card-blue {{ border-left: 6px solid {AAU_BLUE}; }}
     .card-yellow {{ border-left: 6px solid {AAU_YELLOW}; }}
+    /* Main header style */
     .main-header {{
         font-size: 2.8rem;
         font-weight: 800;
@@ -65,11 +70,12 @@ st.markdown(f"""
         margin-bottom: 2rem;
         opacity: 0.8;
     }}
+    /* Tabs */
     .stTabs [data-baseweb="tab"] {{
         border-radius: 8px 8px 0 0;
         padding: 10px 20px;
         background: #eef2f5;
-        color: {AAU_BLUE};
+        color: {DARK_TEXT};
     }}
     .stTabs [aria-selected="true"] {{
         background: {AAU_YELLOW} !important;
@@ -97,10 +103,20 @@ st.markdown(f"""
         transform: translateY(-2px);
         box-shadow: 0 6px 14px rgba(31,78,121,0.3);
     }}
+    /* Force plots background (if any) */
     .shap-force-plot {{
         background: {AAU_WHITE} !important;
     }}
 </style>
+""", unsafe_allow_html=True)
+
+# ---------- Note about file upload limit ----------
+st.markdown("""
+<div style="background:#e8f0fe; padding:0.5rem; border-radius:8px; margin-bottom:1rem;">
+    ℹ️ <b>File upload limit:</b> Streamlit default is 200MB. To increase, create a folder <code>.streamlit</code> with <code>config.toml</code> containing:<br>
+    <code>[server]</code><br>
+    <code>maxUploadSize = 1024</code>  (size in MB)
+</div>
 """, unsafe_allow_html=True)
 
 # ---------- Define the EXACT 73 features ----------
@@ -183,7 +199,7 @@ else:
     st.warning("Models not loaded. Place joblib files in `models/`.")
     n_features = 73
 
-# ---------- Sidebar (AAU themed, no external image) ----------
+# ---------- Sidebar (AAU themed) ----------
 with st.sidebar:
     st.markdown(f"<h1 style='color:{AAU_YELLOW}; text-align:center;'>🛡️</h1>", unsafe_allow_html=True)
     st.markdown(f"<h2 style='color:{AAU_YELLOW}; text-align:center;'>LCGA IDS</h2>", unsafe_allow_html=True)
@@ -319,23 +335,32 @@ with tabs[3]:
             for i, (lbl, conf) in enumerate(zip(labels, confidences)):
                 st.write(f"**Sample {i+1}:** {lbl}  ({conf:.1%} confidence)")
 
-            # SHAP explanation for first sample (FIXED)
-            st.subheader("SHAP Explanation (first sample)")
+            # --- SHAP explanation as bar chart (avoid force plot errors) ---
+            st.subheader("SHAP Feature Importance (first sample)")
             shap_vals = shap_explainer.shap_values(input_data[0:1])
             cls_idx = preds[0]
             if isinstance(shap_vals, list):
-                sv = shap_vals[cls_idx][0]
-                base = shap_explainer.expected_value[cls_idx]
+                sv = shap_vals[cls_idx][0]   # shap values for the predicted class
             else:
                 sv = shap_vals[0]
-                base = shap_explainer.expected_value
 
-            # Use shap.force_plot with matplotlib=True (compatible with older SHAP)
-            fig = shap.force_plot(base, sv, input_data[0],
-                                  feature_names=feature_names,
-                                  matplotlib=True, show=False)
+            # Create a DataFrame of feature names and SHAP values
+            shap_df = pd.DataFrame({
+                'feature': feature_names,
+                'shap_value': sv
+            }).sort_values('shap_value', key=abs, ascending=False).head(15)
+
+            # Plot horizontal bar chart
+            fig, ax = plt.subplots(figsize=(10, 6))
+            colors = [AAU_BLUE if val >= 0 else AAU_YELLOW for val in shap_df['shap_value']]
+            ax.barh(shap_df['feature'], shap_df['shap_value'], color=colors)
+            ax.axvline(0, color='gray', linestyle='-', linewidth=0.5)
+            ax.set_xlabel('SHAP value (impact on model output)')
+            ax.set_title(f'Top 15 features for predicted class: {le.inverse_transform([cls_idx])[0]}')
+            ax.grid(axis='x', alpha=0.3)
             st.pyplot(fig)
 
+            # Decision tree rules (first few levels)
             st.subheader("Decision Tree Rule Path (first 5 levels)")
             st.code(export_text(dt, feature_names=list(feature_names), max_depth=5)[:1200])
 
@@ -366,7 +391,7 @@ with tabs[4]:
         col3.metric("Actions Executed", len(df))
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- TAB 5: Explainability Explorer ---
+# --- TAB 5: Explainability Explorer (using bar chart) ---
 with tabs[5]:
     st.markdown("<div class='card card-blue'>", unsafe_allow_html=True)
     st.subheader("Interactive Explainability Explorer")
@@ -386,11 +411,19 @@ with tabs[5]:
             st.success(f"Prediction: **{le.inverse_transform([cls])[0]}**")
             shap_vals = shap_explainer.shap_values(x)
             if isinstance(shap_vals, list):
-                fig = shap.force_plot(shap_explainer.expected_value[cls], shap_vals[cls][0], x[0],
-                                      feature_names=feature_names, matplotlib=True, show=False)
+                sv = shap_vals[cls][0]
             else:
-                fig = shap.force_plot(shap_explainer.expected_value, shap_vals[0], x[0],
-                                      feature_names=feature_names, matplotlib=True, show=False)
+                sv = shap_vals[0]
+            shap_df = pd.DataFrame({
+                'feature': feature_names,
+                'shap_value': sv
+            }).sort_values('shap_value', key=abs, ascending=False).head(15)
+            fig, ax = plt.subplots(figsize=(10, 6))
+            colors = [AAU_BLUE if val >= 0 else AAU_YELLOW for val in shap_df['shap_value']]
+            ax.barh(shap_df['feature'], shap_df['shap_value'], color=colors)
+            ax.axvline(0, color='gray', linestyle='-', linewidth=0.5)
+            ax.set_xlabel('SHAP value')
+            ax.set_title(f'Top 15 features for predicted class: {le.inverse_transform([cls])[0]}')
             st.pyplot(fig)
     st.markdown("</div>", unsafe_allow_html=True)
 
