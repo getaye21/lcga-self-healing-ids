@@ -334,8 +334,8 @@ tabs = st.tabs([
     "📖 Overview",
     "⚙️ Methodology",
     "📊 Results",
-    "🔬 Live Detection",      # was tab 4, now tab 3
-    "🔧 Self-Healing",        # was tab 3, now tab 4
+    "🔬 Live Detection",
+    "🔧 Self-Healing",
     "🧠 Explainability",
     "📋 Action Log",
     "✅ Conclusion",
@@ -346,32 +346,16 @@ tabs = st.tabs([
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[0]:
     st.header("📖 Overview")
-
-    # ── User guide ────────────────────────────────────────────────────────────
     with st.expander("🗺️ How to use this dashboard — Start here!", expanded=True):
         st.markdown("""
-<div class="step-box">
-<b>Step 1 — 🔬 Live Detection</b>: Upload a CSV of network flows (or use the sample file below).
-The DT Surrogate classifies each flow and shows SHAP explanations instantly.
-</div>
-<div class="step-box">
-<b>Step 2 — 🔧 Self-Healing</b>: Click <em>Run Detection Cycle</em> to simulate the MAPE-K loop.
-Watch intents change from 🟢 Satisfied → 🔴 Violated → 🟢 Restored.
-</div>
-<div class="step-box">
-<b>Step 3 — 🧠 Explainability</b>: Choose any attack class from the dropdown to see which
-network features drive the model's decision (SHAP bar chart).
-</div>
-<div class="step-box">
-<b>Step 4 — 📋 Action Log</b>: Review the full history of healing actions and ISR metric.
-</div>
-<div class="step-box">
-<b>Step 5 — 📊 Results</b>: Compare all models, SHAP vs LIME, and ablation variants.
-</div>
-<div class="tip-box">
-💡 <b>Tip</b>: Have no CSV? Download the sample CICIDS2017 file in the 🔬 Live Detection tab —
-it contains 3 pre-labelled flows (DoS Hulk · BENIGN · PortScan) ready to classify.
-</div>
+<div class="step-box"><b>Step 1 — 🔬 Live Detection</b>: Upload a CSV of network flows (or use the sample file below).<br>
+The DT Surrogate classifies each flow and shows SHAP explanations instantly.</div>
+<div class="step-box"><b>Step 2 — 🔧 Self-Healing</b>: Click <em>Run Detection Cycle</em> to simulate the MAPE-K loop.<br>
+Watch intents change from 🟢 Satisfied → 🔴 Violated → 🟢 Restored.</div>
+<div class="step-box"><b>Step 3 — 🧠 Explainability</b>: Choose any attack class from the dropdown to see which network features drive the model's decision (SHAP bar chart).</div>
+<div class="step-box"><b>Step 4 — 📋 Action Log</b>: Review the full history of healing actions and ISR metric.</div>
+<div class="step-box"><b>Step 5 — 📊 Results</b>: Compare all models, SHAP vs LIME, and ablation variants.</div>
+<div class="tip-box">💡 <b>Tip</b>: Have no CSV? Download the sample CICIDS2017 file in the 🔬 Live Detection tab — it contains 3 pre-labelled flows (DoS Hulk · BENIGN · PortScan) ready to classify.</div>
 """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
@@ -411,7 +395,6 @@ This thesis presents an **Optimised Hybrid Deep Learning Framework** integrating
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[1]:
     st.header("⚙️ Methodology")
-
     with st.expander("🏗️ LCGA Architecture (41,260 parameters)", expanded=True):
         st.markdown(
             f'<img src="{_ARCH_IMG}" style="width:100%;border-radius:10px;'
@@ -436,7 +419,6 @@ with tabs[1]:
 
 **Training:** Adam (lr=0.001) · Sparse categorical CE · EarlyStopping(patience=10) · ReduceLROnPlateau · max 60 epochs · batch 512
         """)
-
     with st.expander("🌳 DT Surrogate + SHAP — What is XAI and why does it matter?"):
         st.markdown("""
 **What is XAI (Explainable AI)?**
@@ -454,7 +436,6 @@ that decision — so a security analyst can verify and trust it.
 LCGA's soft probability vectors → **99.64% fidelity** → enables SHAP TreeExplainer
 at **11,635× the speed of LIME**.
         """)
-
     with st.expander("🔄 MAPE-K Orchestrator — What does Self-Healing mean?"):
         st.markdown(
             f'<img src="{_MAPEK_IMG}" style="width:100%;border-radius:10px;'
@@ -486,7 +467,6 @@ all without human intervention.
 4. **Execute** — action applied (BLOCK_IP, RATE_LIMIT, ISOLATE_SUBNET…)
 5. **Verify** — after adaptive cooldown, intent re-evaluated; 3 failures → escalation
         """)
-
     with st.expander("📦 Data Preprocessing"):
         st.markdown("""
 **CICIDS2017:** 8 CSV files → clean (drop NaN/Inf) → Pearson r > 0.85 correlation filter
@@ -498,12 +478,10 @@ all without human intervention.
         """)
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 2 — Results (FIXED: deterministic, no random noise)
+# TAB 2 — Results (deterministic)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[2]:
     st.header("📊 Experimental Results")
-
-    # ── Model comparison ──────────────────────────────────────────────────────
     st.subheader("1. Model Comparison — CICIDS2017 Test Set")
     model_df = pd.DataFrame({
         "Model":        ["Random Forest","CNN Baseline","GRU Baseline","LCGA (Ours)"],
@@ -517,7 +495,6 @@ with tabs[2]:
     st.dataframe(model_df, use_container_width=True)
     st.caption("✓ best/matching best. * Macro F1 pulled down by Heartbleed (11 samples) & Infiltration (36 samples).")
 
-    # Accuracy bar chart
     col1, col2 = st.columns(2)
     with col1:
         fig, ax = plt.subplots(figsize=(5,3))
@@ -532,7 +509,6 @@ with tabs[2]:
             ax.text(b.get_x()+b.get_width()/2, v+0.05, f"{v}%",
                     ha="center", fontsize=8.5, fontweight="bold")
         plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
-
     with col2:
         fig, ax = plt.subplots(figsize=(5,3))
         inf_ms = [0.10,5.17,4.80,1.85]
@@ -544,10 +520,8 @@ with tabs[2]:
                     ha="center", fontsize=8.5, fontweight="bold")
         plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
 
-    # Training curves (deterministic, pre‑computed arrays)
     st.subheader("2. LCGA Training History")
     epochs = list(range(1,31))
-    # Fixed data (no random)
     train_acc = [85.23, 88.45, 90.12, 91.34, 92.56, 93.21, 93.87, 94.32, 94.78, 95.12,
                  95.45, 95.76, 96.02, 96.23, 96.44, 96.62, 96.78, 96.93, 97.05, 97.16,
                  97.25, 97.33, 97.40, 97.46, 97.51, 97.55, 97.59, 97.62, 97.65, 97.67]
@@ -576,10 +550,8 @@ with tabs[2]:
     plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
     st.caption("Fig 1. LCGA training history — accuracy converges ~epoch 20; early stopping triggered at epoch 28.")
 
-    # Confusion matrix (fixed, pre‑computed)
     st.subheader("3. Confusion Matrix (CICIDS2017 Test Set)")
     labels_short = ["BEN","Bot","DDoS","DoS-GE","DoS-Hk","DoS-Sh","DoS-Sl","FTP-P","HB","Inf","PS","SSH-P"]
-    # Fixed matrix (no noise)
     cm = np.array([
         [300924, 2, 1, 0, 3, 0, 0, 0, 0, 0, 1, 0],
         [1, 340, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -606,7 +578,6 @@ with tabs[2]:
     plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
     st.caption("Fig 2. Near-diagonal matrix confirms high per-class accuracy. Rare classes (HB, Inf) have very few samples.")
 
-    # Per-class F1 (fixed values)
     st.subheader("4. Per-Class F1 Scores")
     f1_vals = {"BENIGN":0.999,"Bot":0.920,"DDoS":0.975,"DoS GoldenEye":0.961,
                "DoS Hulk":0.983,"DoS Slowhttptest":0.944,"DoS slowloris":0.932,
@@ -624,8 +595,6 @@ with tabs[2]:
     st.caption("Fig 3. All major classes ≥0.93 F1. Heartbleed and Infiltration are limited by extreme class imbalance (≤36 test samples).")
 
     st.markdown("---")
-
-    # XAI comparison (fixed)
     st.subheader("5. XAI Comparison — SHAP vs LIME")
     xai_df = pd.DataFrame({
         "Metric":              ["Time (ms/sample)","Speedup","Top-3 Consistency","Surrogate Fidelity","Real-time SOC Ready"],
@@ -654,8 +623,6 @@ with tabs[2]:
     st.caption("Fig 4. SHAP is 11,635× faster and fully deterministic. LIME's 30% consistency makes it unreliable for audit trails.")
 
     st.markdown("---")
-
-    # Self-healing comparison (fixed)
     st.subheader("6. Self-Healing System Comparison")
     heal_df = pd.DataFrame({
         "System":        ["Open-loop","Rule-based (fixed 60s)","LCGA + MAPE-K (Ours)"],
@@ -686,8 +653,6 @@ with tabs[2]:
     st.caption("Fig 5. LCGA+MAPE-K achieves 87.6% ISR — 23.4pp above rule-based — with only 13.3s more MTTR due to verified adaptive cooldowns.")
 
     st.markdown("---")
-
-    # Ablation (fixed)
     st.subheader("7. Ablation Study")
     abl_df = pd.DataFrame({
         "Config":    ["A: Full LCGA+MAPE-K","B: No KB Feedback (15s)","C: Open-loop","D: No DT Surrogate"],
@@ -712,55 +677,52 @@ with tabs[2]:
     st.caption("Fig 6. Removing KB feedback (B) drops ISR by 15.2pp. Open-loop (C) = 0% ISR by definition.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Live Detection (FIXED: robust CSV handling)
+# TAB 3 — Live Detection (ROBUST)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[3]:
     st.header("🔬 Live Network Flow Classification")
     st.markdown("""
-> **What this tab does:** Upload a CSV of CICIDS2017 network flows.
+> **What this tab does:** Upload a CSV of network flows.
 > The DT Surrogate classifies each flow in milliseconds and generates a SHAP explanation
 > showing *which features* drove the prediction.
 """)
 
-    # ── How to use guide ──────────────────────────────────────────────────────
     with st.expander("📋 How to use — step-by-step", expanded=False):
         st.markdown("""
 <div class="step-box"><b>Step 1</b> — Download the sample CSV below (3 pre-labelled CICIDS2017 flows)</div>
-<div class="step-box"><b>Step 2</b> — Click <em>Browse files</em> and upload it (or any CSV with 73 CICIDS2017 features)</div>
+<div class="step-box"><b>Step 2</b> — Click <em>Browse files</em> and upload it (or any CSV with network flow features)</div>
 <div class="step-box"><b>Step 3</b> — Read the Predictions table — each row shows class name, confidence, and recommended action</div>
 <div class="step-box"><b>Step 4</b> — Scroll down to the SHAP explanation bar chart for the first sample</div>
 <div class="step-box"><b>Step 5</b> — Check the Top-5 features table to understand the model's reasoning</div>
-<div class="tip-box">💡 Columns are auto-aligned — missing features are padded with 0; extra columns are dropped.
-The Label column (if present) is ignored during prediction.</div>
+<div class="tip-box">💡 The app automatically aligns any CSV to the 73 expected CICIDS2017 features. Missing columns are filled with 0, extra columns are ignored. Non‑numeric columns (like labels) are dropped.</div>
 """, unsafe_allow_html=True)
 
-    # ── Sample CSV download ───────────────────────────────────────────────────
     st.markdown("#### 📥 Sample Test Dataset (CICIDS2017 — 3 flows)")
     sample_csv = make_sample_csv()
     b64 = base64.b64encode(sample_csv.encode()).decode()
     href = (f'<a href="data:text/csv;base64,{b64}" download="sample_cicids2017_flows.csv">'
             '⬇️ Download sample_cicids2017_flows.csv (3 flows: DoS Hulk · BENIGN · PortScan)</a>')
     st.markdown(href, unsafe_allow_html=True)
-    st.caption("This file contains 73 CICIDS2017 features + a Label column. "
-               "The classifier will ignore the Label and predict independently.")
+    st.caption("This file contains 73 CICIDS2017 features + a Label column. The classifier will ignore the Label and predict independently.")
 
     st.markdown("---")
-
-    # ── File upload ───────────────────────────────────────────────────────────
     uploaded = st.file_uploader(
-        "Upload CSV (any size — rows = flows, columns = CICIDS2017 features)",
+        "Upload CSV (any size — rows = flows)",
         type=["csv"],
-        help="Columns are auto-aligned to 73 expected features. Label column is ignored.",
+        help="The app will automatically align to the required 73 features.",
     )
 
-        if uploaded is not None:
+    if uploaded is not None:
         try:
             df_raw = pd.read_csv(uploaded)
         except Exception as e:
             st.error(f"Could not read CSV: {e}")
             st.stop()
 
-        # 1. Remove any column that is entirely non‑numeric (e.g., Label, class, index names)
+        # 1. Strip column names
+        df_raw.columns = [c.strip() for c in df_raw.columns]
+
+        # 2. Keep only numeric columns (drop labels, strings, etc.)
         numeric_cols = []
         for col in df_raw.columns:
             try:
@@ -769,47 +731,57 @@ The Label column (if present) is ignored during prediction.</div>
             except:
                 pass
         if len(numeric_cols) != df_raw.shape[1]:
-            st.info(f"Dropped {df_raw.shape[1] - len(numeric_cols)} non‑numeric column(s).")
+            st.info(f"Dropped {df_raw.shape[1] - len(numeric_cols)} non‑numeric column(s) (e.g., labels).")
             df_raw = df_raw[numeric_cols]
 
-        # 2. Replace inf/-inf and fill NaN with 0
+        # 3. Replace inf/-inf and fill NaN with 0
         df_raw = df_raw.replace([np.inf, -np.inf], np.nan).fillna(0)
 
-        # 3. Define the exact set of expected features (73)
+        # 4. Define expected feature set (73)
         expected = (saved_features if (saved_features is not None and len(saved_features)==73)
                     else SAMPLE_FEATURE_NAMES)
 
-        # 4. Keep only columns that are in `expected` (discard any extra columns like unnamed indexes)
+        # 5. Keep only columns that exist in the expected list (discard any extra)
         existing_cols = [col for col in expected if col in df_raw.columns]
         if len(existing_cols) != len(expected):
             missing = set(expected) - set(df_raw.columns)
             st.info(f"Adding {len(missing)} missing feature(s) with default 0.")
         df_raw = df_raw[existing_cols]
 
-        # 5. Reindex to ensure all expected columns exist (add missing ones with 0)
+        # 6. Reindex to guarantee all 73 columns in the correct order
         df_raw = df_raw.reindex(columns=expected, fill_value=0)
 
-        # 6. Final check
+        # 7. Final sanity check
         if df_raw.shape[1] != 73:
-            st.error(f"Expected 73 features, but got {df_raw.shape[1]}. Cannot proceed.")
+            st.error(f"Expected 73 features, but after alignment got {df_raw.shape[1]}. Please check the CSV.")
             st.stop()
 
         X = df_raw.values.astype(np.float32)
         feature_names = expected
         st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
 
+        # 8. Apply scaler if available and matches feature count
         if scaler is not None:
-            try:
-                X = scaler.transform(X)
-            except Exception:
-                pass
+            if hasattr(scaler, 'n_features_in_') and scaler.n_features_in_ == X.shape[1]:
+                try:
+                    X = scaler.transform(X)
+                except Exception as e:
+                    st.warning(f"Scaling failed: {e}. Using raw data.")
+            else:
+                st.warning(f"Scaler expects {scaler.n_features_in_} features, but we have {X.shape[1]}. Skipping scaling.")
+        else:
+            st.info("No scaler loaded. Using raw data.")
 
-        # Predict
+        # 9. Predict
         st.markdown("#### 🎯 Predictions")
         if model_loaded and dt_model is not None:
-            raw_preds = dt_model.predict(X)
-            probas    = dt_model.predict_proba(X)
-            preds     = [idx_to_label(p) for p in raw_preds]
+            if hasattr(dt_model, 'n_features_in_') and dt_model.n_features_in_ == X.shape[1]:
+                raw_preds = dt_model.predict(X)
+                probas    = dt_model.predict_proba(X)
+                preds     = [idx_to_label(p) for p in raw_preds]
+            else:
+                st.error(f"Model expects {dt_model.n_features_in_} features, but we have {X.shape[1]}. Check feature alignment.")
+                st.stop()
         else:
             st.warning("⚠️ No trained model at `models/dt_surrogate.pkl`. Showing mock predictions.")
             preds  = [np.random.choice(CICIDS_CLASSES) for _ in range(len(X))]
@@ -830,7 +802,7 @@ The Label column (if present) is ignored during prediction.</div>
             icon = "🚨" if preds[i]!="BENIGN" else "✅"
             st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — {probas[i].max():.1%} confidence")
 
-        # SHAP
+        # 10. SHAP for first sample
         st.markdown("#### 🧠 SHAP Explanation (first sample)")
         st.markdown("""
 > **What you're seeing:** Red bars = features that push the prediction *toward* this attack class.
@@ -869,7 +841,7 @@ The Label column (if present) is ignored during prediction.</div>
             import traceback; st.code(traceback.format_exc())
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — Self-Healing (unchanged logic)
+# TAB 4 — Self-Healing
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[4]:
     st.header("🔧 MAPE-K Self-Healing Simulator")
@@ -879,7 +851,6 @@ with tabs[4]:
 > executes it, and verifies whether the violated network intent was restored.
 """)
 
-    # Real MAPE-K diagram
     st.markdown(
         f'<img src="{_MAPEK_IMG}" style="width:100%;max-width:820px;border-radius:10px;'
         f'border:1.5px solid #dde3f0;box-shadow:0 2px 12px rgba(0,0,0,0.10);'
@@ -959,7 +930,7 @@ Our system achieves 87.6% vs 64.2% for rule-based and 0% for open-loop.</div>
             st.success("✅ All intents satisfied")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 5 — Explainability Explorer (unchanged)
+# TAB 5 — Explainability Explorer
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[5]:
     st.header("🧠 Explainability Explorer")
@@ -968,7 +939,6 @@ with tabs[5]:
 > profile — which features most strongly drive the DT Surrogate's decision for that attack.
 > Red = increases risk, Blue = reduces risk.
 """)
-
     with st.expander("📋 How to use the XAI explorer", expanded=False):
         st.markdown("""
 <div class="step-box"><b>Step 1</b> — Select an attack class from the dropdown below</div>
@@ -1002,12 +972,11 @@ with tabs[5]:
                 f"This feature most strongly identifies `{sel}` traffic in the model's decision.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 6 — Action Log (unchanged)
+# TAB 6 — Action Log
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[6]:
     st.header("📋 MAPE-K Action Log")
     st.markdown("> Full history of healing actions triggered by the Self-Healing simulator.")
-
     if st.session_state.history.empty:
         st.info("No actions logged yet. Go to 🔧 Self-Healing and click **Run Detection Cycle**.")
     else:
@@ -1044,11 +1013,10 @@ with tabs[6]:
             st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 7 — Conclusion (unchanged)
+# TAB 7 — Conclusion
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[7]:
     st.header("✅ Conclusion and Future Work")
-
     st.markdown("""
 ### Summary of Contributions
 
@@ -1075,7 +1043,6 @@ with tabs[7]:
 5. **Federated learning** — Multi-site training without sharing raw traffic data
 6. **Rare-class improvement** — Few-shot learning or GAN-based data augmentation
     """)
-
     st.markdown("---")
     col1, col2 = st.columns(2)
     with col1:
@@ -1096,7 +1063,6 @@ with tabs[7]:
 - 📄 [NSL-KDD Dataset](https://www.unb.ca/cic/datasets/nsl.html)
         """)
 
-# ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.caption(
     "A Lightweight Hybrid Deep Learning Framework for Real-Time Cyber Threat Detection "
