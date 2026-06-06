@@ -722,7 +722,16 @@ with tabs[3]:
         # 1. Strip column names
         df_raw.columns = [c.strip() for c in df_raw.columns]
 
-        # 2. Keep only numeric columns (drop labels, strings, etc.)
+        # 2. Drop duplicate column names (keep first)
+        df_raw = df_raw.loc[:, ~df_raw.columns.duplicated()]
+
+        # 3. Drop any columns that are completely empty (all NaN or empty strings)
+        df_raw = df_raw.dropna(axis=1, how='all')
+        empty_cols = [col for col in df_raw.columns if df_raw[col].astype(str).str.strip().eq('').all()]
+        if empty_cols:
+            df_raw = df_raw.drop(columns=empty_cols)
+
+        # 4. Keep only numeric columns (drop labels, strings, etc.)
         numeric_cols = []
         for col in df_raw.columns:
             try:
@@ -734,24 +743,21 @@ with tabs[3]:
             st.info(f"Dropped {df_raw.shape[1] - len(numeric_cols)} non‑numeric column(s) (e.g., labels).")
             df_raw = df_raw[numeric_cols]
 
-        # 3. Replace inf/-inf and fill NaN with 0
+        # 5. Replace inf/-inf and fill NaN with 0
         df_raw = df_raw.replace([np.inf, -np.inf], np.nan).fillna(0)
 
-        # 4. Define expected feature set (73)
+        # 6. Define expected feature set (73)
         expected = (saved_features if (saved_features is not None and len(saved_features)==73)
                     else SAMPLE_FEATURE_NAMES)
 
-        # 5. Keep only columns that exist in the expected list (discard any extra)
-        existing_cols = [col for col in expected if col in df_raw.columns]
-        if len(existing_cols) != len(expected):
-            missing = set(expected) - set(df_raw.columns)
-            st.info(f"Adding {len(missing)} missing feature(s) with default 0.")
-        df_raw = df_raw[existing_cols]
+        # 7. Keep only columns that are in expected (drop any extra columns, like index)
+        cols_to_keep = [col for col in expected if col in df_raw.columns]
+        df_raw = df_raw[cols_to_keep]
 
-        # 6. Reindex to guarantee all 73 columns in the correct order
+        # 8. Reindex to ensure all expected columns exist (add missing with 0)
         df_raw = df_raw.reindex(columns=expected, fill_value=0)
 
-        # 7. Final sanity check
+        # 9. Final sanity check
         if df_raw.shape[1] != 73:
             st.error(f"Expected 73 features, but after alignment got {df_raw.shape[1]}. Please check the CSV.")
             st.stop()
@@ -760,7 +766,7 @@ with tabs[3]:
         feature_names = expected
         st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
 
-        # 8. Apply scaler if available and matches feature count
+        # 10. Apply scaler if available and matches feature count
         if scaler is not None:
             if hasattr(scaler, 'n_features_in_') and scaler.n_features_in_ == X.shape[1]:
                 try:
@@ -772,7 +778,7 @@ with tabs[3]:
         else:
             st.info("No scaler loaded. Using raw data.")
 
-        # 9. Predict
+        # 11. Predict
         st.markdown("#### 🎯 Predictions")
         if model_loaded and dt_model is not None:
             if hasattr(dt_model, 'n_features_in_') and dt_model.n_features_in_ == X.shape[1]:
@@ -802,7 +808,7 @@ with tabs[3]:
             icon = "🚨" if preds[i]!="BENIGN" else "✅"
             st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — {probas[i].max():.1%} confidence")
 
-        # 10. SHAP for first sample
+        # 12. SHAP for first sample
         st.markdown("#### 🧠 SHAP Explanation (first sample)")
         st.markdown("""
 > **What you're seeing:** Red bars = features that push the prediction *toward* this attack class.
