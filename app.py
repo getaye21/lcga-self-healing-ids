@@ -677,7 +677,7 @@ with tabs[2]:
     st.caption("Fig 6. Removing KB feedback (B) drops ISR by 15.2pp. Open-loop (C) = 0% ISR by definition.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Live Detection (ROBUST)
+# TAB 3 — Live Detection (ROBUST to any CSV)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[3]:
     st.header("🔬 Live Network Flow Classification")
@@ -750,23 +750,60 @@ with tabs[3]:
         expected = (saved_features if (saved_features is not None and len(saved_features)==73)
                     else SAMPLE_FEATURE_NAMES)
 
-        # 7. Keep only columns that are in expected (drop any extra columns, like index)
+        # 7. Normalise column names: lowercase, strip spaces, replace underscores with spaces for matching
+        def normalize_name(name):
+            return name.strip().lower().replace('_', ' ')
+
+        norm_expected = {normalize_name(f): f for f in expected}
+        norm_columns = {normalize_name(c): c for c in df_raw.columns}
+
+        # Find matching columns
+        matched_cols = []
+        for norm_feat, orig_feat in norm_expected.items():
+            if norm_feat in norm_columns:
+                matched_cols.append((orig_feat, norm_columns[norm_feat]))
+        if matched_cols:
+            # Rename matched columns to expected names
+            rename_map = {orig_col: exp_name for exp_name, orig_col in matched_cols}
+            df_raw = df_raw.rename(columns=rename_map)
+
+        # 8. Keep only columns that are in expected (drop any extra numeric columns)
         cols_to_keep = [col for col in expected if col in df_raw.columns]
         df_raw = df_raw[cols_to_keep]
 
-        # 8. Reindex to ensure all expected columns exist (add missing with 0)
+        # 9. Reindex to ensure all expected columns exist (add missing with 0)
         df_raw = df_raw.reindex(columns=expected, fill_value=0)
 
-        # 9. Final sanity check
+        # 10. Final sanity check
         if df_raw.shape[1] != 73:
-            st.error(f"Expected 73 features, but after alignment got {df_raw.shape[1]}. Please check the CSV.")
+            # If still not 73, fallback to mock predictions
+            st.warning(f"Expected 73 features, but after alignment got {df_raw.shape[1]}. Using fallback mode (mock predictions).")
+            # Create fallback mock predictions
+            n_rows = len(df_raw) if len(df_raw) > 0 else 1
+            preds = [np.random.choice(CICIDS_CLASSES) for _ in range(n_rows)]
+            probas = np.zeros((n_rows, len(CICIDS_CLASSES)))
+            for i, p in enumerate(preds):
+                probas[i, CICIDS_CLASSES.index(p)] = np.random.uniform(0.85, 1.0)
+            st.markdown("#### 🎯 Predictions (Fallback Mode)")
+            pred_df = pd.DataFrame({
+                "Sample": [f"Sample {i+1}" for i in range(n_rows)],
+                "Prediction": preds,
+                "Confidence": [f"{probas[i].max():.1%}" for i in range(n_rows)],
+                "Action": [ACTION_MAP.get(p, "ESCALATE") if p != "BENIGN" else "—" for p in preds],
+                "Risk": ["🔴 ATTACK" if p != "BENIGN" else "🟢 BENIGN" for p in preds],
+            })
+            st.dataframe(pred_df, use_container_width=True)
+            for i in range(min(len(preds), 5)):
+                icon = "🚨" if preds[i] != "BENIGN" else "✅"
+                st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — {probas[i].max():.1%} confidence")
+            st.info("⚠️ Model alignment failed. Showing mock predictions. Check that your CSV contains at least some known CICIDS2017 feature names.")
             st.stop()
 
         X = df_raw.values.astype(np.float32)
         feature_names = expected
         st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
 
-        # 10. Apply scaler if available and matches feature count
+        # 11. Apply scaler if available and matches feature count
         if scaler is not None:
             if hasattr(scaler, 'n_features_in_') and scaler.n_features_in_ == X.shape[1]:
                 try:
@@ -778,7 +815,7 @@ with tabs[3]:
         else:
             st.info("No scaler loaded. Using raw data.")
 
-        # 11. Predict
+        # 12. Predict
         st.markdown("#### 🎯 Predictions")
         if model_loaded and dt_model is not None:
             if hasattr(dt_model, 'n_features_in_') and dt_model.n_features_in_ == X.shape[1]:
@@ -786,14 +823,17 @@ with tabs[3]:
                 probas    = dt_model.predict_proba(X)
                 preds     = [idx_to_label(p) for p in raw_preds]
             else:
-                st.error(f"Model expects {dt_model.n_features_in_} features, but we have {X.shape[1]}. Check feature alignment.")
-                st.stop()
+                st.warning(f"Model expects {dt_model.n_features_in_} features, but we have {X.shape[1]}. Using fallback mock predictions.")
+                preds = [np.random.choice(CICIDS_CLASSES) for _ in range(len(X))]
+                probas = np.zeros((len(X), len(CICIDS_CLASSES)))
+                for i, p in enumerate(preds):
+                    probas[i, CICIDS_CLASSES.index(p)] = np.random.uniform(0.85, 1.0)
         else:
             st.warning("⚠️ No trained model at `models/dt_surrogate.pkl`. Showing mock predictions.")
             preds  = [np.random.choice(CICIDS_CLASSES) for _ in range(len(X))]
             probas = np.zeros((len(X), len(CICIDS_CLASSES)))
-            for i,p in enumerate(preds):
-                probas[i, CICIDS_CLASSES.index(p)] = np.random.uniform(0.85,1.0)
+            for i, p in enumerate(preds):
+                probas[i, CICIDS_CLASSES.index(p)] = np.random.uniform(0.85, 1.0)
 
         pred_df = pd.DataFrame({
             "Sample":      [f"Sample {i+1}" for i in range(len(X))],
@@ -808,15 +848,15 @@ with tabs[3]:
             icon = "🚨" if preds[i]!="BENIGN" else "✅"
             st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — {probas[i].max():.1%} confidence")
 
-        # 12. SHAP for first sample
-        st.markdown("#### 🧠 SHAP Explanation (first sample)")
-        st.markdown("""
+        # 13. SHAP for first sample (only if real model used)
+        if model_loaded and dt_model is not None and hasattr(dt_model, 'n_features_in_') and dt_model.n_features_in_ == X.shape[1]:
+            st.markdown("#### 🧠 SHAP Explanation (first sample)")
+            st.markdown("""
 > **What you're seeing:** Red bars = features that push the prediction *toward* this attack class.
 > Blue bars = features that push *away*. Longer = stronger influence.
 """)
-        try:
-            import shap
-            if model_loaded and dt_model is not None:
+            try:
+                import shap
                 sv_1d, base_val, class_idx = _extract_shap(dt_model, X[:1])
                 if sv_1d is not None:
                     pred_label = idx_to_label(class_idx)
@@ -836,18 +876,14 @@ with tabs[3]:
                     st.dataframe(top_df, use_container_width=True)
                 else:
                     st.warning("Could not compute SHAP for this model type.")
-            else:
-                sv_mock = np.random.randn(len(feature_names))*0.3
-                st.pyplot(shap_bar_chart(sv_mock, feature_names, preds[0]), clear_figure=True)
-                plt.close("all"); st.caption("Mock SHAP shown — load real model for true explanations.")
-        except ImportError:
-            st.error("SHAP not installed. Add `shap` to requirements.txt.")
-        except Exception as e:
-            st.error(f"SHAP error: {e}")
-            import traceback; st.code(traceback.format_exc())
+            except ImportError:
+                st.error("SHAP not installed. Add `shap` to requirements.txt.")
+            except Exception as e:
+                st.error(f"SHAP error: {e}")
+                import traceback; st.code(traceback.format_exc())
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — Self-Healing
+# TAB 4 — Self-Healing (unchanged)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[4]:
     st.header("🔧 MAPE-K Self-Healing Simulator")
@@ -936,7 +972,7 @@ Our system achieves 87.6% vs 64.2% for rule-based and 0% for open-loop.</div>
             st.success("✅ All intents satisfied")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 5 — Explainability Explorer
+# TAB 5 — Explainability Explorer (unchanged)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[5]:
     st.header("🧠 Explainability Explorer")
@@ -978,7 +1014,7 @@ with tabs[5]:
                 f"This feature most strongly identifies `{sel}` traffic in the model's decision.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 6 — Action Log
+# TAB 6 — Action Log (unchanged)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[6]:
     st.header("📋 MAPE-K Action Log")
@@ -1019,7 +1055,7 @@ with tabs[6]:
             st.rerun()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 7 — Conclusion
+# TAB 7 — Conclusion (unchanged)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[7]:
     st.header("✅ Conclusion and Future Work")
