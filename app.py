@@ -753,14 +753,14 @@ The Label column (if present) is ignored during prediction.</div>
         help="Columns are auto-aligned to 73 expected features. Label column is ignored.",
     )
 
-    if uploaded is not None:
+        if uploaded is not None:
         try:
             df_raw = pd.read_csv(uploaded)
         except Exception as e:
             st.error(f"Could not read CSV: {e}")
             st.stop()
 
-        # Remove any purely non‑numeric columns (e.g., labels)
+        # 1. Remove any column that is entirely non‑numeric (e.g., Label, class, index names)
         numeric_cols = []
         for col in df_raw.columns:
             try:
@@ -772,18 +772,30 @@ The Label column (if present) is ignored during prediction.</div>
             st.info(f"Dropped {df_raw.shape[1] - len(numeric_cols)} non‑numeric column(s).")
             df_raw = df_raw[numeric_cols]
 
-        # Replace inf/-inf and fill NaN with 0
+        # 2. Replace inf/-inf and fill NaN with 0
         df_raw = df_raw.replace([np.inf, -np.inf], np.nan).fillna(0)
 
-        # Align to the 73 expected features
+        # 3. Define the exact set of expected features (73)
         expected = (saved_features if (saved_features is not None and len(saved_features)==73)
                     else SAMPLE_FEATURE_NAMES)
-        # Reindex: adds missing columns with 0, drops extra columns
+
+        # 4. Keep only columns that are in `expected` (discard any extra columns like unnamed indexes)
+        existing_cols = [col for col in expected if col in df_raw.columns]
+        if len(existing_cols) != len(expected):
+            missing = set(expected) - set(df_raw.columns)
+            st.info(f"Adding {len(missing)} missing feature(s) with default 0.")
+        df_raw = df_raw[existing_cols]
+
+        # 5. Reindex to ensure all expected columns exist (add missing ones with 0)
         df_raw = df_raw.reindex(columns=expected, fill_value=0)
 
-        # Convert all to float (should be already)
+        # 6. Final check
+        if df_raw.shape[1] != 73:
+            st.error(f"Expected 73 features, but got {df_raw.shape[1]}. Cannot proceed.")
+            st.stop()
+
         X = df_raw.values.astype(np.float32)
-        feature_names = list(expected)
+        feature_names = expected
         st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
 
         if scaler is not None:
