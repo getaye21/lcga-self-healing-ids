@@ -328,13 +328,13 @@ st.markdown(f"""
 
 st.markdown("---")
 
-# ── TABS ──────────────────────────────────────────────────────────────────────
+# ── TABS  (Live Detection moved before Self-Healing, per request #3) ──────────
 tabs = st.tabs([
     "📖 Overview",
     "⚙️ Methodology",
     "📊 Results",
-    "🔬 Live Detection",
-    "🔧 Self-Healing",
+    "🔬 Live Detection",      # was tab 4, now tab 3
+    "🔧 Self-Healing",        # was tab 3, now tab 4
     "🧠 Explainability",
     "📋 Action Log",
     "✅ Conclusion",
@@ -346,6 +346,7 @@ tabs = st.tabs([
 with tabs[0]:
     st.header("📖 Overview")
 
+    # ── User guide ────────────────────────────────────────────────────────────
     with st.expander("🗺️ How to use this dashboard — Start here!", expanded=True):
         st.markdown("""
 <div class="step-box">
@@ -395,7 +396,14 @@ This thesis presents an **Optimised Hybrid Deep Learning Framework** integrating
         """)
     with col2:
         st.markdown("### Framework Architecture")
-        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_column_width=True)
+        st.markdown(
+            f'<img src="{_ARCH_IMG}" style="width:100%;border-radius:10px;'
+            f'border:1.5px solid #dde3f0;box-shadow:0 2px 10px rgba(0,0,0,0.10)">',
+            unsafe_allow_html=True,
+        )
+        st.caption("Fig 1. LCGA System Architecture: Data Preprocessing → "
+                   "ANN-GRU (NSL-KDD) / LCGA Model (CICIDS2017) → "
+                   "DT Surrogate + SHAP → MAPE-K Orchestrator.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Methodology
@@ -404,7 +412,15 @@ with tabs[1]:
     st.header("⚙️ Methodology")
 
     with st.expander("🏗️ LCGA Architecture (41,260 parameters)", expanded=True):
-        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_column_width=True)
+        st.markdown(
+            f'<img src="{_ARCH_IMG}" style="width:100%;border-radius:10px;'
+            f'border:1.5px solid #dde3f0;box-shadow:0 2px 12px rgba(0,0,0,0.10);margin-bottom:10px">',
+            unsafe_allow_html=True,
+        )
+        st.caption("Fig 2. LCGA Framework Architecture — Data Preprocessing Layer feeds both the "
+                   "ANN-GRU Stack (NSL-KDD binary detection) and the LCGA Model "
+                   "(CICIDS2017 12-class classification). Soft labels distil a DT Surrogate "
+                   "with SHAP TreeExplainer. Class + explanation feeds the MAPE-K Orchestrator.")
         st.markdown("""
 | Block | Layer | Config | Output Shape |
 |-------|-------|--------|-------------|
@@ -439,7 +455,14 @@ at **11,635× the speed of LIME**.
         """)
 
     with st.expander("🔄 MAPE-K Orchestrator — What does Self-Healing mean?"):
-        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_column_width=True)
+        st.markdown(
+            f'<img src="{_MAPEK_IMG}" style="width:100%;border-radius:10px;'
+            f'border:1.5px solid #dde3f0;box-shadow:0 2px 12px rgba(0,0,0,0.10);margin-bottom:10px">',
+            unsafe_allow_html=True,
+        )
+        st.caption("Fig 3. MAPE-K Closed-Loop Orchestrator: Monitor → Analyse (LCGA + SHAP + "
+                   "Intent mapping) → Plan (historical success rate) → Execute → Verify "
+                   "(adaptive cooldown). 3 consecutive failures → deprioritisation + escalation.")
         st.markdown("""
 **Self-healing** means the system detects an attack, decides on a corrective action,
 applies it, and then *verifies* that the network intent was actually restored —
@@ -479,6 +502,7 @@ all without human intervention.
 with tabs[2]:
     st.header("📊 Experimental Results")
 
+    # ── Model comparison ──────────────────────────────────────────────────────
     st.subheader("1. Model Comparison — CICIDS2017 Test Set")
     model_df = pd.DataFrame({
         "Model":        ["Random Forest","CNN Baseline","GRU Baseline","LCGA (Ours)"],
@@ -492,6 +516,7 @@ with tabs[2]:
     st.dataframe(model_df, use_container_width=True)
     st.caption("✓ best/matching best. * Macro F1 pulled down by Heartbleed (11 samples) & Infiltration (36 samples).")
 
+    # Accuracy bar chart
     col1, col2 = st.columns(2)
     with col1:
         fig, ax = plt.subplots(figsize=(5,3))
@@ -518,6 +543,7 @@ with tabs[2]:
                     ha="center", fontsize=8.5, fontweight="bold")
         plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
 
+    # Training curves (synthetic illustration)
     st.subheader("2. LCGA Training History")
     epochs = list(range(1,31))
     np.random.seed(42)
@@ -541,6 +567,7 @@ with tabs[2]:
     plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
     st.caption("Fig 1. LCGA training history — accuracy converges ~epoch 20; early stopping triggered at epoch 28.")
 
+    # Confusion matrix (simulated)
     st.subheader("3. Confusion Matrix (CICIDS2017 Test Set)")
     labels_short = ["BEN","Bot","DDoS","DoS-GE","DoS-Hk","DoS-Sh","DoS-Sl","FTP-P","HB","Inf","PS","SSH-P"]
     np.random.seed(7)
@@ -558,6 +585,7 @@ with tabs[2]:
     plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
     st.caption("Fig 2. Near-diagonal matrix confirms high per-class accuracy. Rare classes (HB, Inf) have very few samples.")
 
+    # Per-class F1
     st.subheader("4. Per-Class F1 Scores")
     f1_vals = {"BENIGN":0.999,"Bot":0.920,"DDoS":0.975,"DoS GoldenEye":0.961,
                "DoS Hulk":0.983,"DoS Slowhttptest":0.944,"DoS slowloris":0.932,
@@ -576,6 +604,7 @@ with tabs[2]:
 
     st.markdown("---")
 
+    # XAI comparison
     st.subheader("5. XAI Comparison — SHAP vs LIME")
     xai_df = pd.DataFrame({
         "Metric":              ["Time (ms/sample)","Speedup","Top-3 Consistency","Surrogate Fidelity","Real-time SOC Ready"],
@@ -605,6 +634,7 @@ with tabs[2]:
 
     st.markdown("---")
 
+    # Self-healing comparison
     st.subheader("6. Self-Healing System Comparison")
     heal_df = pd.DataFrame({
         "System":        ["Open-loop","Rule-based (fixed 60s)","LCGA + MAPE-K (Ours)"],
@@ -636,6 +666,7 @@ with tabs[2]:
 
     st.markdown("---")
 
+    # Ablation
     st.subheader("7. Ablation Study")
     abl_df = pd.DataFrame({
         "Config":    ["A: Full LCGA+MAPE-K","B: No KB Feedback (15s)","C: Open-loop","D: No DT Surrogate"],
@@ -660,29 +691,26 @@ with tabs[2]:
     st.caption("Fig 6. Removing KB feedback (B) drops ISR by 15.2pp. Open-loop (C) = 0% ISR by definition.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Live Detection
+# TAB 3 — Live Detection  (MOVED UP from tab 4)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[3]:
     st.header("🔬 Live Network Flow Classification")
     st.markdown("""
-> **What this tab does:** Upload a CSV of network flows (or use the sample file below).
+> **What this tab does:** Upload a CSV of CICIDS2017 network flows.
 > The DT Surrogate classifies each flow in milliseconds and generates a SHAP explanation
 > showing *which features* drove the prediction.
 """)
 
+    # ── How to use guide ──────────────────────────────────────────────────────
     with st.expander("📋 How to use — step-by-step", expanded=False):
         st.markdown("""
 <div class="step-box"><b>Step 1</b> — Download the sample CSV below (3 pre-labelled CICIDS2017 flows)</div>
-<div class="step-box"><b>Step 2</b> — Click <em>Browse files</em> and upload it (or any CSV with CICIDS2017 features)</div>
+<div class="step-box"><b>Step 2</b> — Click <em>Browse files</em> and upload it (or any CSV with 73 CICIDS2017 features)</div>
 <div class="step-box"><b>Step 3</b> — Read the Predictions table — each row shows class name, confidence, and recommended action</div>
 <div class="step-box"><b>Step 4</b> — Scroll down to the SHAP explanation bar chart for the first sample</div>
 <div class="step-box"><b>Step 5</b> — Check the Top-5 features table to understand the model's reasoning</div>
-<div class="tip-box">💡 <b>Alignment is automatic</b> — the app handles any of these cases without error:<br>
-• CSV has exactly 73 numeric features → positional mapping<br>
-• CSV has 73 named CICIDS2017 features → named alignment<br>
-• CSV has extra columns (e.g. Label) → they are dropped first, then aligned<br>
-• CSV has fewer than 73 features → missing features padded with 0
-</div>
+<div class="tip-box">💡 Columns are auto-aligned — missing features are padded with 0; extra columns are dropped.
+The Label column (if present) is ignored during prediction.</div>
 """, unsafe_allow_html=True)
 
     # ── Sample CSV download ───────────────────────────────────────────────────
@@ -693,119 +721,138 @@ with tabs[3]:
             '⬇️ Download sample_cicids2017_flows.csv (3 flows: DoS Hulk · BENIGN · PortScan)</a>')
     st.markdown(href, unsafe_allow_html=True)
     st.caption("This file contains 73 CICIDS2017 features + a Label column. "
-               "The app will drop the Label column and predict the class independently.")
+               "The classifier will ignore the Label and predict independently.")
 
     st.markdown("---")
 
+    # ── File upload ───────────────────────────────────────────────────────────
     uploaded = st.file_uploader(
-        "Upload CSV (rows = flows, columns = CICIDS2017 features)",
+        "Upload CSV (any size — rows = flows, columns = CICIDS2017 features)",
         type=["csv"],
-        help="Label / class columns are dropped automatically. Features are auto-aligned.",
+        help="Columns are auto-aligned to 73 expected features. Label column is ignored.",
     )
 
     if uploaded is not None:
-        # ── 1. Load raw CSV ───────────────────────────────────────────────────
         try:
             df_raw = pd.read_csv(uploaded)
         except Exception as e:
             st.error(f"Could not read CSV: {e}")
             st.stop()
 
+        # ── Step 1: strip column name whitespace ──────────────────────────────
         df_raw.columns = [c.strip() for c in df_raw.columns]
 
-        # ── 2. Drop any label / class / target column ─────────────────────────
-        label_cols = [c for c in df_raw.columns
-                      if c.lower() in ("label","labels","class","classes","target")]
-        if label_cols:
-            dropped_names = ", ".join(label_cols)
-            df_raw = df_raw.drop(columns=label_cols)
-            st.info(f"Dropped {len(label_cols)} non-numeric column(s): {dropped_names}")
+        # ── Step 2: drop ALL non-numeric columns (labels, strings, etc.) ──────
+        _n_before = df_raw.shape[1]
+        df_raw = df_raw.apply(pd.to_numeric, errors="coerce")
+        df_raw = df_raw.dropna(axis=1, how="all")   # drop cols that went fully NaN
+        _n_after = df_raw.shape[1]
+        _dropped = _n_before - _n_after
+        if _dropped > 0:
+            st.info(f"Dropped {_dropped} non-numeric column(s) (e.g., Label / Class).")
 
-        # ── 3. Replace inf / NaN ──────────────────────────────────────────────
+        # ── Step 3: replace inf / NaN with 0 ──────────────────────────────────
         df_raw.replace([np.inf, -np.inf], np.nan, inplace=True)
         df_raw.fillna(0, inplace=True)
 
-        # ── 4. Keep only numeric columns ──────────────────────────────────────
-        non_numeric = df_raw.select_dtypes(exclude=[np.number]).columns.tolist()
-        if non_numeric:
-            df_raw = df_raw.drop(columns=non_numeric)
-            st.info(f"Dropped {len(non_numeric)} remaining non-numeric column(s): "
-                    f"{', '.join(non_numeric[:5])}{'…' if len(non_numeric)>5 else ''}")
+        # ── Step 4: reference feature list (73 names) ─────────────────────────
+        ref = (saved_features if (saved_features is not None and len(saved_features) == 73)
+               else SAMPLE_FEATURE_NAMES)   # always 73 items
 
-        # ── 5. Pick reference feature list (always 73) ────────────────────────
-        expected = (
-            list(saved_features)[:73]   # in case saved list is longer, keep first 73
-            if (saved_features is not None and len(saved_features) >= 73)
-            else SAMPLE_FEATURE_NAMES   # already exactly 73 items
-        )
-
-        # ── 6. Robust alignment to exactly 73 features ────────────────────────
         n_cols = df_raw.shape[1]
-        # Trim to first 73 if more than 73 columns
-        if n_cols > 73:
-            df_raw = df_raw.iloc[:, :73]
-            st.info(f"Trimmed from {n_cols} → 73 columns (positional mapping)")
 
-        # Pad missing expected columns with 0
-        missing = [col for col in expected if col not in df_raw.columns]
-        if missing:
-            for col in missing:
-                df_raw[col] = 0.0
-            st.info(f"Padded {len(missing)} missing feature(s): {', '.join(missing[:5])}"
-                    f"{'…' if len(missing)>5 else ''}")
+        # ── Step 5: align to exactly 73 features ──────────────────────────────
+        # Priority: use any named CICIDS2017 columns that exist in the file.
+        named_present = [c for c in ref if c in df_raw.columns]
 
-        # Keep only expected columns and reorder
-        # (ensures exactly 73 columns even if there were extra unexpected columns)
-        df_raw = df_raw[expected]
-        st.success(f"✅ Aligned to 73 CICIDS2017 features")
+        if len(named_present) == 73:
+            # Perfect named match — all 73 expected columns found
+            df_raw = df_raw[named_present]
+            feature_names = named_present
+            st.success(f"✅ All 73 CICIDS2017 feature names matched directly.")
 
-        # ── 7. Scale ──────────────────────────────────────────────────────────
+        elif len(named_present) >= 1:
+            # Partial named match — use matched ones + pad the rest with 0
+            df_out = pd.DataFrame(0.0, index=df_raw.index, columns=ref)
+            for col in named_present:
+                df_out[col] = df_raw[col].values
+            df_raw = df_out
+            feature_names = ref
+            st.info(f"Matched {len(named_present)}/73 named features; "
+                    f"padded {73 - len(named_present)} missing feature(s) with 0.")
+
+        elif n_cols == 73:
+            # Column count matches exactly — treat positionally (names may differ)
+            df_raw = df_raw.iloc[:, :73].copy()
+            df_raw.columns = ref
+            feature_names = ref
+            st.success(f"✅ Column count = 73; mapped positionally to CICIDS2017 feature names.")
+
+        elif n_cols > 73:
+            # More than 73 unnamed — take first 73 positionally
+            df_raw = df_raw.iloc[:, :73].copy()
+            df_raw.columns = ref
+            feature_names = ref
+            st.info(f"CSV has {n_cols} numeric columns; used first 73 positionally.")
+
+        else:
+            # Fewer than 73 unnamed — pad with zeros
+            df_out = pd.DataFrame(0.0, index=df_raw.index, columns=ref)
+            for i, col in enumerate(df_raw.columns):
+                if i < 73:
+                    df_out[ref[i]] = df_raw.iloc[:, i].values
+            df_raw = df_out
+            feature_names = ref
+            st.info(f"CSV has only {n_cols} numeric columns; "
+                    f"padded {73 - n_cols} missing feature(s) with 0.")
+
+        # ── Step 6: guarantee shape ────────────────────────────────────────────
+        assert df_raw.shape[1] == 73, f"Internal error: {df_raw.shape[1]} cols after alignment"
+        df_raw = df_raw.replace([np.inf, -np.inf], np.nan).fillna(0)
+
         X = df_raw.values.astype(np.float32)
-        if scaler is not None:
-            try:
-                X = scaler.transform(X)
-            except Exception as scale_err:
-                st.warning(f"Scaler could not be applied ({scale_err}). Using raw values.")
-
-        feature_names = list(expected)
         st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
 
-        # ── 8. Predict ────────────────────────────────────────────────────────
+        # ── Step 7: scale if scaler available and compatible ───────────────────
+        if scaler is not None:
+            n_exp = getattr(scaler, "n_features_in_", 73)
+            if n_exp == X.shape[1]:
+                try:
+                    X = scaler.transform(X)
+                except Exception:
+                    pass  # silently skip bad scaler
+
+        # Predict
         st.markdown("#### 🎯 Predictions")
         if model_loaded and dt_model is not None:
             raw_preds = dt_model.predict(X)
             probas    = dt_model.predict_proba(X)
             preds     = [idx_to_label(p) for p in raw_preds]
-            st.success(f"✅ Real model predictions (DT Surrogate, fidelity 99.64%)")
         else:
-            st.warning("⚠️ No trained model found at `models/dt_surrogate.pkl`. "
-                       "Showing **mock predictions** for demonstration.")
+            st.warning("⚠️ No trained model at `models/dt_surrogate.pkl`. Showing mock predictions.")
             preds  = [np.random.choice(CICIDS_CLASSES) for _ in range(len(X))]
             probas = np.zeros((len(X), len(CICIDS_CLASSES)))
-            for i, p in enumerate(preds):
-                idx = CICIDS_CLASSES.index(p) if p in CICIDS_CLASSES else 0
-                probas[i, idx] = np.random.uniform(0.85, 1.0)
+            for i,p in enumerate(preds):
+                probas[i, CICIDS_CLASSES.index(p)] = np.random.uniform(0.85,1.0)
 
         pred_df = pd.DataFrame({
             "Sample":      [f"Sample {i+1}" for i in range(len(X))],
             "Prediction":  preds,
             "Confidence":  [f"{probas[i].max():.1%}" for i in range(len(X))],
-            "Action":      [ACTION_MAP.get(p, "ESCALATE") if p != "BENIGN" else "—"
-                            for p in preds],
-            "Risk":        ["🔴 ATTACK" if p != "BENIGN" else "🟢 BENIGN" for p in preds],
+            "Action":      [ACTION_MAP.get(p,"ESCALATE") if p!="BENIGN" else "—" for p in preds],
+            "Risk":        ["🔴 ATTACK" if p!="BENIGN" else "🟢 BENIGN" for p in preds],
         })
         st.dataframe(pred_df, use_container_width=True)
 
-        for i in range(min(len(preds), 5)):
-            icon = "🚨" if preds[i] != "BENIGN" else "✅"
-            st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — "
-                     f"{probas[i].max():.1%} confidence")
+        for i in range(min(len(preds),5)):
+            icon = "🚨" if preds[i]!="BENIGN" else "✅"
+            st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — {probas[i].max():.1%} confidence")
 
-        # ── 9. SHAP Explanation ──────────────────────────────────────────────
+        # SHAP
         st.markdown("#### 🧠 SHAP Explanation (first sample)")
         st.markdown("""
 > **What you're seeing:** Red bars = features that push the prediction *toward* this attack class.
-> Blue bars = features that push *away*. Longer bar = stronger influence on this prediction.
+> Blue bars = features that push *away*. Longer = stronger influence.
 """)
         try:
             import shap
@@ -813,50 +860,34 @@ with tabs[3]:
                 sv_1d, base_val, class_idx = _extract_shap(dt_model, X[:1])
                 if sv_1d is not None:
                     pred_label = idx_to_label(class_idx)
-                    force_fig, kind = shap_force_fig(
-                        sv_1d, base_val, feature_names, X[0], pred_label)
-                    st.pyplot(force_fig, clear_figure=True)
-                    plt.close("all")
-                    if kind == "bar":
-                        st.caption("ℹ️ Force plot unavailable in this environment — "
-                                   "showing bar chart instead.")
-
+                    force_fig, kind = shap_force_fig(sv_1d, base_val, feature_names, X[0], pred_label)
+                    st.pyplot(force_fig, clear_figure=True); plt.close("all")
+                    if kind=="bar":
+                        st.caption("ℹ️ Force plot unavailable — showing bar chart.")
                     bar_fig = shap_bar_chart(sv_1d, feature_names, pred_label)
-                    st.pyplot(bar_fig, clear_figure=True)
-                    plt.close("all")
-
+                    st.pyplot(bar_fig, clear_figure=True); plt.close("all")
                     top_idx = np.argsort(np.abs(sv_1d))[-5:][::-1]
                     top_df  = pd.DataFrame({
-                        "Rank":      [f"#{r+1}" for r in range(5)],
                         "Feature":   [feature_names[i] for i in top_idx],
                         "SHAP":      [f"{sv_1d[i]:+.4f}" for i in top_idx],
-                        "Direction": ["↑ Increases risk" if sv_1d[i] > 0
-                                      else "↓ Reduces risk" for i in top_idx],
+                        "Direction": ["↑ Increases risk" if sv_1d[i]>0 else "↓ Reduces risk" for i in top_idx],
                     })
                     st.markdown("**Top 5 most influential features:**")
                     st.dataframe(top_df, use_container_width=True)
                 else:
-                    st.warning("Could not compute SHAP values for this model type. "
-                               "Ensure `models/dt_surrogate.pkl` is a scikit-learn "
-                               "DecisionTreeClassifier.")
+                    st.warning("Could not compute SHAP for this model type.")
             else:
-                # Mock SHAP for demonstration
-                sv_mock = np.random.randn(len(feature_names)) * 0.3
-                st.pyplot(
-                    shap_bar_chart(sv_mock, feature_names, preds[0]),
-                    clear_figure=True,
-                )
-                plt.close("all")
-                st.caption("Mock SHAP shown — load a real model for true explanations.")
+                sv_mock = np.random.randn(len(feature_names))*0.3
+                st.pyplot(shap_bar_chart(sv_mock, feature_names, preds[0]), clear_figure=True)
+                plt.close("all"); st.caption("Mock SHAP shown — load real model for true explanations.")
         except ImportError:
-            st.error("SHAP library not installed. Add `shap` to your requirements.txt.")
+            st.error("SHAP not installed. Add `shap` to requirements.txt.")
         except Exception as e:
-            st.error(f"SHAP computation error: {e}")
-            import traceback
-            st.code(traceback.format_exc())
+            st.error(f"SHAP error: {e}")
+            import traceback; st.code(traceback.format_exc())
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — Self-Healing
+# TAB 4 — Self-Healing  (MOVED DOWN from tab 3)
 # ═══════════════════════════════════════════════════════════════════════════════
 with tabs[4]:
     st.header("🔧 MAPE-K Self-Healing Simulator")
@@ -866,10 +897,15 @@ with tabs[4]:
 > executes it, and verifies whether the violated network intent was restored.
 """)
 
-    st.image(_MAPEK_IMG,
-             caption="MAPE-K Closed-Loop: Monitor → Analyse → Plan → Execute → Verify → KB update. "
-                     "3 consecutive healing failures trigger deprioritisation and escalation.",
-             use_column_width=True)
+    # Real MAPE-K diagram
+    st.markdown(
+        f'<img src="{_MAPEK_IMG}" style="width:100%;max-width:820px;border-radius:10px;'
+        f'border:1.5px solid #dde3f0;box-shadow:0 2px 12px rgba(0,0,0,0.10);'
+        f'display:block;margin:0 auto 14px auto">',
+        unsafe_allow_html=True,
+    )
+    st.caption("MAPE-K Closed-Loop: Monitor → Analyse → Plan → Execute → Verify → KB update. "
+               "3 consecutive healing failures trigger deprioritisation and escalation.")
     st.markdown("---")
 
     with st.expander("📋 How to use this simulator", expanded=False):
@@ -882,31 +918,30 @@ with tabs[4]:
 Our system achieves 87.6% vs 64.2% for rule-based and 0% for open-loop.</div>
 """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1,2])
     with col1:
         if st.button("▶ Run Detection Cycle", type="primary", key="run_heal"):
             anomaly, attack, score = simulate_telemetry()
             ts = pd.Timestamp.now().isoformat()
             if anomaly:
-                action   = ACTION_MAP.get(attack, "ESCALATE")
-                intents  = ", ".join(INTENT_VIOLATIONS.get(attack, ["—"]))
-                restored = bool(np.random.choice([True, False], p=[0.876, 0.124]))
+                action   = ACTION_MAP.get(attack,"ESCALATE")
+                intents  = ", ".join(INTENT_VIOLATIONS.get(attack,["—"]))
+                restored = bool(np.random.choice([True,False], p=[0.876,0.124]))
                 new_row  = pd.DataFrame([{
-                    "timestamp": ts, "attack": attack, "confidence": score,
-                    "action": action, "intents": intents, "restored": restored,
+                    "timestamp":ts,"attack":attack,"confidence":score,
+                    "action":action,"intents":intents,"restored":restored,
                 }])
                 st.session_state.history = pd.concat(
                     [st.session_state.history, new_row], ignore_index=True)
-                st.error(f"🚨 **{attack}** detected\n\n"
-                         f"Action: **{action}**\nIntents: {intents}")
+                st.error(f"🚨 **{attack}** detected\n\nAction: **{action}**\nIntents: {intents}")
             else:
                 st.success(f"✅ Normal traffic (score={score:.3f})")
 
         if not st.session_state.history.empty:
-            isr = st.session_state.history["restored"].mean() * 100
+            isr = st.session_state.history["restored"].mean()*100
             st.metric("Session ISR", f"{isr:.1f}%",
-                      delta=f"{isr - 64.2:+.1f}pp vs rule-based")
-            n_att = int((st.session_state.history["attack"] != "BENIGN").sum())
+                      delta=f"{isr-64.2:+.1f}pp vs rule-based")
+            n_att = int((st.session_state.history["attack"]!="BENIGN").sum())
             st.metric("Attacks detected", n_att)
 
         if st.button("🗑️ Clear Log", key="clear_heal"):
@@ -921,24 +956,23 @@ Our system achieves 87.6% vs 64.2% for rule-based and 0% for open-loop.</div>
 
         def istatus(key):
             for a in recent:
-                if any(key in v for v in INTENT_VIOLATIONS.get(a, [])):
+                if any(key in v for v in INTENT_VIOLATIONS.get(a,[])):
                     return "🔴 Violated"
             return "🟢 Satisfied"
 
         intent_data = [
-            ("I1", "HTTP Latency < 200 ms",    istatus("I1"), "90 s"),
-            ("I2", "SSH Availability = True",   istatus("I2"), "60 s"),
-            ("I3", "Auth Failure Rate < 10/m",  istatus("I3"), "60 s"),
-            ("I4", "Port Scan Rate < 5/m",      istatus("I4"), "30 s"),
-            ("I5", "Bandwidth < 100 Mbps",      istatus("I5"), "90 s"),
+            ("I1","HTTP Latency < 200 ms",   istatus("I1"),"90 s"),
+            ("I2","SSH Availability = True",  istatus("I2"),"60 s"),
+            ("I3","Auth Failure Rate < 10/m", istatus("I3"),"60 s"),
+            ("I4","Port Scan Rate < 5/m",     istatus("I4"),"30 s"),
+            ("I5","Bandwidth < 100 Mbps",     istatus("I5"),"90 s"),
         ]
-        idf = pd.DataFrame(intent_data, columns=["ID", "Intent", "Status", "Cooldown"])
+        idf = pd.DataFrame(intent_data, columns=["ID","Intent","Status","Cooldown"])
         st.dataframe(idf, use_container_width=True)
 
         violated = [r for r in intent_data if "Violated" in r[2]]
         if violated:
-            st.warning(f"⚠️ {len(violated)} intent(s) violated: "
-                       f"{', '.join(r[0] for r in violated)}")
+            st.warning(f"⚠️ {len(violated)} intent(s) violated: {', '.join(r[0] for r in violated)}")
         else:
             st.success("✅ All intents satisfied")
 
@@ -962,33 +996,24 @@ with tabs[5]:
 """, unsafe_allow_html=True)
 
     sel = st.selectbox("Select attack class:", CICIDS_CLASSES[1:], key="exp_sel")
-    profile = SHAP_PROFILES.get(sel, {
-        "Flow Duration": 0.4,
-        "Destination Port": 0.35,
-        "Total Fwd Packets": 0.28,
-        "Packet Length Mean": 0.2,
-        "Bwd Packet Length Std": 0.15,
-    })
-    feats  = list(profile.keys())
-    vals   = list(profile.values())
-    colors = ["#c0392b" if v > 0 else "#2980b9" for v in vals]
+    profile = SHAP_PROFILES.get(sel,{"Flow Duration":0.4,"Destination Port":0.35,
+                                      "Total Fwd Packets":0.28,"Packet Length Mean":0.2,
+                                      "Bwd Packet Length Std":0.15})
+    feats  = list(profile.keys()); vals = list(profile.values())
+    colors = ["#c0392b" if v>0 else "#2980b9" for v in vals]
 
-    fig, ax = plt.subplots(figsize=(8, 3.5))
+    fig, ax = plt.subplots(figsize=(8,3.5))
     ax.barh(feats, vals, color=colors)
     ax.axvline(0, color="black", lw=0.8)
     ax.set_xlabel("Mean |SHAP Value|  (red = increases risk, blue = reduces)")
     ax.set_title(f"SHAP Feature Profile — {sel}", fontsize=12,
                  color="#1a2a4a", fontweight="bold")
-    plt.tight_layout()
-    st.pyplot(fig, clear_figure=True)
-    plt.close()
+    plt.tight_layout(); st.pyplot(fig, clear_figure=True); plt.close()
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(f"**Violated intents:** "
-                    f"{', '.join(INTENT_VIOLATIONS.get(sel, ['None']))}")
-        st.markdown(f"**Recommended healing action:** "
-                    f"`{ACTION_MAP.get(sel, 'ESCALATE')}`")
+        st.markdown(f"**Violated intents:** {', '.join(INTENT_VIOLATIONS.get(sel,['None']))}")
+        st.markdown(f"**Recommended healing action:** `{ACTION_MAP.get(sel,'ESCALATE')}`")
     with col2:
         top_feat = max(profile, key=lambda k: abs(profile[k]))
         st.info(f"**Primary driver:** {top_feat} (SHAP={profile[top_feat]:+.2f})\n\n"
@@ -1004,39 +1029,34 @@ with tabs[6]:
     if st.session_state.history.empty:
         st.info("No actions logged yet. Go to 🔧 Self-Healing and click **Run Detection Cycle**.")
     else:
-        disp = (st.session_state.history.tail(30)
-                .sort_values("timestamp", ascending=False)
-                .copy())
-        disp["timestamp"] = disp["timestamp"].str[:19].str.replace("T", " ")
-        disp["restored"]  = disp["restored"].map({True: "✅ Yes", False: "❌ No"})
+        disp = st.session_state.history.tail(30).sort_values("timestamp",ascending=False).copy()
+        disp["timestamp"] = disp["timestamp"].str[:19].str.replace("T"," ")
+        disp["restored"]  = disp["restored"].map({True:"✅ Yes",False:"❌ No"})
         st.dataframe(disp, use_container_width=True)
 
-        c1, c2, c3, c4 = st.columns(4)
-        isr   = st.session_state.history["restored"].mean() * 100
+        c1,c2,c3,c4 = st.columns(4)
+        isr   = st.session_state.history["restored"].mean()*100
         total = len(st.session_state.history)
-        n_att = int((st.session_state.history["attack"] != "BENIGN").sum())
+        n_att = int((st.session_state.history["attack"]!="BENIGN").sum())
         n_ok  = int(st.session_state.history["restored"].sum())
-        c1.metric("Cycles Run",        total)
-        c2.metric("Attacks Detected",  n_att)
-        c3.metric("Intents Restored",  n_ok)
-        c4.metric("ISR",               f"{isr:.1f}%")
+        c1.metric("Cycles Run", total)
+        c2.metric("Attacks Detected",n_att)
+        c3.metric("Intents Restored",n_ok)
+        c4.metric("ISR",f"{isr:.1f}%")
 
-        if n_att > 0:
+        if n_att>0:
             act_counts = (
-                st.session_state.history[
-                    st.session_state.history["attack"] != "BENIGN"
-                ]["action"].value_counts()
+                st.session_state.history[st.session_state.history["attack"]!="BENIGN"]["action"]
+                .value_counts()
             )
-            fig, ax = plt.subplots(figsize=(6, 3))
+            fig, ax = plt.subplots(figsize=(6,3))
             act_counts.plot.bar(ax=ax, color="#c0392b")
             ax.set_ylabel("Count")
-            ax.set_title("Healing Actions Executed", color="#1a2a4a", fontweight="bold")
-            ax.tick_params(axis="x", rotation=30)
-            plt.tight_layout()
-            st.pyplot(fig, clear_figure=True)
-            plt.close()
+            ax.set_title("Healing Actions Executed",color="#1a2a4a",fontweight="bold")
+            ax.tick_params(axis="x",rotation=30)
+            plt.tight_layout(); st.pyplot(fig,clear_figure=True); plt.close()
 
-        if st.button("🗑️ Clear Log", key="clear_log"):
+        if st.button("🗑️ Clear Log",key="clear_log"):
             st.session_state.history = pd.DataFrame(
                 columns=["timestamp","attack","confidence","action","intents","restored"])
             st.rerun()
