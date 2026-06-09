@@ -722,8 +722,7 @@ The Label column (if present) is ignored during prediction.</div>
     href = (f'<a href="data:text/csv;base64,{b64}" download="sample_cicids2017_flows.csv">'
             '⬇️ Download sample_cicids2017_flows.csv (3 flows: DoS Hulk · BENIGN · PortScan)</a>')
     st.markdown(href, unsafe_allow_html=True)
-    st.caption("This file contains 73 CICIDS2017 features column. "
-               "The classifier will ignore the Label and predict independently.")
+    st.caption("This file contains 73 CICIDS2017 features column. ")
 
     st.markdown("---")
 
