@@ -391,7 +391,7 @@ This thesis presents an **Optimised Hybrid Deep Learning Framework** integrating
         """)
     with col2:
         st.markdown("### Framework Architecture")
-        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_column_width=True)
+        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_container_width=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Methodology
@@ -400,7 +400,7 @@ with tabs[1]:
     st.header("⚙️ Methodology")
 
     with st.expander("🏗️ LCGA Architecture (41,260 parameters)", expanded=True):
-        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_column_width=True)
+        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_container_width=True)
         st.markdown("""
 | Block | Layer | Config | Output Shape |
 |-------|-------|--------|-------------|
@@ -435,7 +435,7 @@ at **11,635× the speed of LIME**.
         """)
 
     with st.expander("🔄 MAPE-K Orchestrator — What does Self-Healing mean?"):
-        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_column_width=True)
+        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_container_width=True)
         st.markdown("""
 **Self-healing** means the system detects an attack, decides on a corrective action,
 applies it, and then *verifies* that the network intent was actually restored —
@@ -735,39 +735,71 @@ with tabs[3]:
             else SAMPLE_FEATURE_NAMES
         )
 
-        # ── 6. Robust alignment to 73 features ────────────────────────────────
         n_cols = df_raw.shape[1]
-        st.write(f"Columns before alignment: {n_cols}")
 
-        # If more than 73 columns, keep only the first 73 (positional trim)
-        if n_cols > 73:
-            df_raw = df_raw.iloc[:, :73]
-            st.info(f"Trimmed from {n_cols} → 73 columns (positional mapping)")
+        # ── 6. ROBUST ALIGNMENT ───────────────────────────────────────────────
+        #  Priority order:
+        #  (a) 73 named features present → select by name in correct order
+        #  (b) Exactly 73 columns → assume positional mapping
+        #  (c) More than 73 columns → trim to first 73 (positional)
+        #  (d) Fewer than 73 columns → pad missing with 0
 
-        # Pad any missing expected columns with 0
-        missing = [col for col in expected if col not in df_raw.columns]
-        if missing:
-            for col in missing:
-                df_raw[col] = 0.0
-            st.info(f"Padded {len(missing)} missing feature(s): {', '.join(missing[:5])}"
-                    f"{'…' if len(missing)>5 else ''}")
+        named_match = [c for c in expected if c in df_raw.columns]
 
-        # Reorder to expected order and keep only expected columns
-        df_raw = df_raw[expected]
-        st.success(f"✅ Aligned to 73 CICIDS2017 features")
+        if len(named_match) == 73:
+            # (a) Perfect named match — reorder to expected
+            df_raw = df_raw[expected]
+            st.success(f"✅ Aligned 73 named CICIDS2017 features (by column name)")
+        elif n_cols == 73:
+            # (b) Count matches — assume positional alignment
+            df_raw.columns = expected
+            st.success(f"✅ Positionally mapped {n_cols} columns to expected feature names")
+        elif n_cols > 73:
+            # (c) Extra columns — try named first, then trim
+            if len(named_match) > 0:
+                # Use named ones we have + pad the rest
+                for col in expected:
+                    if col not in df_raw.columns:
+                        df_raw[col] = 0.0
+                df_raw = df_raw[expected]
+                st.info(f"Used {len(named_match)} named features; padded "
+                        f"{73 - len(named_match)} missing features with 0 "
+                        f"(dropped {n_cols - 73} extra columns)")
+            else:
+                # No named match — positional trim
+                df_raw = df_raw.iloc[:, :73].copy()
+                df_raw.columns = expected
+                st.info(f"Trimmed from {n_cols} → 73 columns (positional mapping)")
+        else:
+            # (d) Fewer columns — pad missing with 0
+            for col in expected:
+                if col not in df_raw.columns:
+                    df_raw[col] = 0.0
+            df_raw = df_raw[expected]
+            st.info(f"Padded {73 - n_cols} missing feature(s) with 0 "
+                    f"(had {n_cols}, need 73)")
 
-        # ── 7. Scale ──────────────────────────────────────────────────────────
+        # Always sync expected to the final column list
+        expected = list(df_raw.columns)
+
+        # ── 7. Final shape check ──────────────────────────────────────────────
+        assert df_raw.shape[1] == 73, (
+            f"Internal alignment error: got {df_raw.shape[1]} columns, expected 73. "
+            "Please report this as a bug."
+        )
+
         X = df_raw.values.astype(np.float32)
+        feature_names = list(expected)
+        st.success(f"Loaded **{len(X)} flow(s)** | Features after alignment: {X.shape[1]}")
+
+        # ── 8. Scale ──────────────────────────────────────────────────────────
         if scaler is not None:
             try:
                 X = scaler.transform(X)
             except Exception as scale_err:
                 st.warning(f"Scaler could not be applied ({scale_err}). Using raw values.")
 
-        feature_names = list(expected)
-        st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
-
-        # ── 8. Predict ────────────────────────────────────────────────────────
+        # ── 9. Predict ────────────────────────────────────────────────────────
         st.markdown("#### 🎯 Predictions")
         if model_loaded and dt_model is not None:
             raw_preds = dt_model.predict(X)
@@ -798,7 +830,7 @@ with tabs[3]:
             st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — "
                      f"{probas[i].max():.1%} confidence")
 
-        # ── 9. SHAP Explanation ──────────────────────────────────────────────
+        # ── 10. SHAP Explanation ──────────────────────────────────────────────
         st.markdown("#### 🧠 SHAP Explanation (first sample)")
         st.markdown("""
 > **What you're seeing:** Red bars = features that push the prediction *toward* this attack class.
@@ -866,7 +898,7 @@ with tabs[4]:
     st.image(_MAPEK_IMG,
              caption="MAPE-K Closed-Loop: Monitor → Analyse → Plan → Execute → Verify → KB update. "
                      "3 consecutive healing failures trigger deprioritisation and escalation.",
-             use_column_width=True)
+             use_container_width=True)
     st.markdown("---")
 
     with st.expander("📋 How to use this simulator", expanded=False):
