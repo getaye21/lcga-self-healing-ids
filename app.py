@@ -735,47 +735,37 @@ with tabs[3]:
             else SAMPLE_FEATURE_NAMES
         )
 
-        # ── 6. Align to expected features ─────────────────────────────────────
-        n_cols = df_raw.shape[1]   # <-- define before the alignment block
+        # ── 6. Robust alignment to 73 features ────────────────────────────────
+        n_cols = df_raw.shape[1]
+        st.write(f"Columns before alignment: {n_cols}")
 
-        # 1. Check how many expected features exist by name
-        named_match = [c for c in expected if c in df_raw.columns]
-
-        if len(named_match) == 73:
-            # Perfect named match — select in order
-            df_raw = df_raw[expected]
-            st.success(f"✅ Aligned 73 named CICIDS2017 features")
-        elif n_cols == 73:
-            # Column count matches — assume positional alignment
-            df_raw.columns = expected
-            st.success(f"✅ Positionally mapped {n_cols} columns to expected feature names")
-        elif n_cols > 73:
-            # Extra columns — trim to first 73
+        # If more than 73 columns, keep only the first 73 (positional trim)
+        if n_cols > 73:
             df_raw = df_raw.iloc[:, :73]
-            df_raw.columns = expected
             st.info(f"Trimmed from {n_cols} → 73 columns (positional mapping)")
-        else:
-            # Fewer columns — pad missing with 0, keep named if available
-            for col in expected:
-                if col not in df_raw.columns:
-                    df_raw[col] = 0.0
-            df_raw = df_raw[expected]
-            st.info(f"Padded {73 - len(named_match)} missing feature(s) with 0")
 
-        expected = list(df_raw.columns)  # always update
+        # Pad any missing expected columns with 0
+        missing = [col for col in expected if col not in df_raw.columns]
+        if missing:
+            for col in missing:
+                df_raw[col] = 0.0
+            st.info(f"Padded {len(missing)} missing feature(s): {', '.join(missing[:5])}"
+                    f"{'…' if len(missing)>5 else ''}")
+
+        # Reorder to expected order and keep only expected columns
+        df_raw = df_raw[expected]
+        st.success(f"✅ Aligned to 73 CICIDS2017 features")
 
         # ── 7. Scale ──────────────────────────────────────────────────────────
+        X = df_raw.values.astype(np.float32)
         if scaler is not None:
             try:
-                X = scaler.transform(df_raw.values.astype(np.float32))
+                X = scaler.transform(X)
             except Exception as scale_err:
                 st.warning(f"Scaler could not be applied ({scale_err}). Using raw values.")
-                X = df_raw.values.astype(np.float32)
-        else:
-            X = df_raw.values.astype(np.float32)
 
         feature_names = list(expected)
-        st.success(f"Loaded **{len(X)} flow(s)** | Features after alignment: {X.shape[1]}")
+        st.success(f"Loaded **{len(X)} flow(s)** | Features: {X.shape[1]}")
 
         # ── 8. Predict ────────────────────────────────────────────────────────
         st.markdown("#### 🎯 Predictions")
