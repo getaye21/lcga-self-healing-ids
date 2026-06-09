@@ -391,7 +391,7 @@ This thesis presents an **Optimised Hybrid Deep Learning Framework** integrating
         """)
     with col2:
         st.markdown("### Framework Architecture")
-        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_container_width=True)
+        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_column_width=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Methodology
@@ -400,7 +400,7 @@ with tabs[1]:
     st.header("⚙️ Methodology")
 
     with st.expander("🏗️ LCGA Architecture (41,260 parameters)", expanded=True):
-        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_container_width=True)
+        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_column_width=True)
         st.markdown("""
 | Block | Layer | Config | Output Shape |
 |-------|-------|--------|-------------|
@@ -435,7 +435,7 @@ at **11,635× the speed of LIME**.
         """)
 
     with st.expander("🔄 MAPE-K Orchestrator — What does Self-Healing mean?"):
-        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_container_width=True)
+        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_column_width=True)
         st.markdown("""
 **Self-healing** means the system detects an attack, decides on a corrective action,
 applies it, and then *verifies* that the network intent was actually restored —
@@ -485,7 +485,7 @@ with tabs[2]:
         "Params":       ["100 trees","5,196","~20,000","41,260"],
         "Inference ms": ["0.10","5.17","4.80","1.85 ✓"],
     })
-    st.dataframe(model_df, use_container_width=True)
+    st.dataframe(model_df, use_column_width=True)
     st.caption("✓ best/matching best. * Macro F1 pulled down by Heartbleed (11 samples) & Infiltration (36 samples).")
 
     col1, col2 = st.columns(2)
@@ -578,7 +578,7 @@ with tabs[2]:
         "SHAP (DT Surrogate)": ["0.05","11,635×","100% (deterministic)","99.64%","✅ Yes"],
         "LIME":                ["812","—","30.0%","N/A","❌ No"],
     })
-    st.dataframe(xai_df, use_container_width=True)
+    st.dataframe(xai_df, use_column_width=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -608,7 +608,7 @@ with tabs[2]:
         "ISR (%)":       [0.0,64.2,87.6],
         "MTTR Reduction":["—","89.1%","86.9%"],
     })
-    st.dataframe(heal_df, use_container_width=True)
+    st.dataframe(heal_df, use_column_width=True)
 
     col1, col2 = st.columns(2)
     systems = ["Open-loop","Rule-based","LCGA+MAPE-K"]
@@ -640,7 +640,7 @@ with tabs[2]:
         "ISR (%)":   ["87.6","72.4","0.0","87.6"],
         "MTTR (s)":  ["78.4","17.1","598.5","78.4*"],
     })
-    st.dataframe(abl_df, use_container_width=True)
+    st.dataframe(abl_df, use_column_width=True)
     st.caption("* D: healing pipeline unchanged; only explanation latency increases 3–10×.")
 
     fig, ax = plt.subplots(figsize=(7,3))
@@ -823,7 +823,7 @@ with tabs[3]:
                             for p in preds],
             "Risk":        ["🔴 ATTACK" if p != "BENIGN" else "🟢 BENIGN" for p in preds],
         })
-        st.dataframe(pred_df, use_container_width=True)
+        st.dataframe(pred_df, use_column_width=True)
 
         for i in range(min(len(preds), 5)):
             icon = "🚨" if preds[i] != "BENIGN" else "✅"
@@ -863,7 +863,7 @@ with tabs[3]:
                                       else "↓ Reduces risk" for i in top_idx],
                     })
                     st.markdown("**Top 5 most influential features:**")
-                    st.dataframe(top_df, use_container_width=True)
+                    st.dataframe(top_df, use_column_width=True)
                 else:
                     st.warning("Could not compute SHAP values for this model type. "
                                "Ensure `models/dt_surrogate.pkl` is a scikit-learn "
@@ -898,7 +898,7 @@ with tabs[4]:
     st.image(_MAPEK_IMG,
              caption="MAPE-K Closed-Loop: Monitor → Analyse → Plan → Execute → Verify → KB update. "
                      "3 consecutive healing failures trigger deprioritisation and escalation.",
-             use_container_width=True)
+             use_column_width=True)
     st.markdown("---")
 
     with st.expander("📋 How to use this simulator", expanded=False):
@@ -962,7 +962,7 @@ Our system achieves 87.6% vs 64.2% for rule-based and 0% for open-loop.</div>
             ("I5", "Bandwidth < 100 Mbps",      istatus("I5"), "90 s"),
         ]
         idf = pd.DataFrame(intent_data, columns=["ID", "Intent", "Status", "Cooldown"])
-        st.dataframe(idf, use_container_width=True)
+        st.dataframe(idf, use_column_width=True)
 
         violated = [r for r in intent_data if "Violated" in r[2]]
         if violated:
@@ -1038,7 +1038,7 @@ with tabs[6]:
                 .copy())
         disp["timestamp"] = disp["timestamp"].str[:19].str.replace("T", " ")
         disp["restored"]  = disp["restored"].map({True: "✅ Yes", False: "❌ No"})
-        st.dataframe(disp, use_container_width=True)
+        st.dataframe(disp, use_column_width=True)
 
         c1, c2, c3, c4 = st.columns(4)
         isr   = st.session_state.history["restored"].mean() * 100
