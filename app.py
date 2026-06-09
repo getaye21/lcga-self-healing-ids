@@ -99,38 +99,40 @@ SHAP_PROFILES = {
     "DoS slowloris":{"Flow Duration":0.59,"Fwd IAT Mean":0.44,"Total Fwd Packets":0.27,"Fwd Packet Length Std":-0.17,"Active Mean":0.13},
 }
 
-# ── Sample CICIDS2017 CSV (3 representative flows embedded) ───────────────────
-SAMPLE_CSV_ROWS = [
-    # 73 feature columns — representative CICIDS2017 values
-    # Row 1: DoS Hulk-like
-    "80,6,0,20,1,20,0,2000,1000,500,300,100,2000,1000,200,400,800,400,0,0,0,0,50,100,0,0,0,0,0,0,2,1,3,0,0,0,0,0,1000000,2000000,200,400,5,50,0,0,0,0,0,0,4096,0,1,0,0,0,0,0,0,0,0,0,0,200,400,0,0,0,0,0,0,0",
-    # Row 2: BENIGN-like
-    "443,6,100000,10,5,2,3,500,250,100,50,30,400,200,80,100,200,100,0,0,0,0,10000,20000,5000,10000,2500,5000,0,0,0,0,1,0,0,0,0,0,50000,100000,100,200,1,5,0,0,0,0,0,0,8192,65535,1,0,0,0,0,0,0,0,0,0,0,50,100,0,0,0,0,0,0,0",
-    # Row 3: PortScan-like
-    "22,6,0,3,2,1,0,60,40,20,10,5,60,40,12,15,30,15,0,0,0,0,100,200,0,0,0,0,0,0,3,0,3,0,0,0,0,0,200000,600000,20,40,3,20,0,0,0,0,0,0,1024,0,1,0,0,0,0,0,0,0,0,0,0,20,40,0,0,0,0,0,0,0",
+# ── Sample CICIDS2017 CSV (3 representative flows – 73 features) ─────────────
+SAMPLE_FEATURE_NAMES = [
+    "Destination Port","Flow Duration","Total Fwd Packets",
+    "Total Backward Packets","Total Length of Fwd Packets",
+    "Total Length of Bwd Packets","Fwd Packet Length Max",
+    "Fwd Packet Length Min","Fwd Packet Length Mean",
+    "Fwd Packet Length Std","Bwd Packet Length Max",
+    "Bwd Packet Length Min","Bwd Packet Length Mean",
+    "Bwd Packet Length Std","Flow Bytes/s","Flow Packets/s",
+    "Flow IAT Mean","Flow IAT Std","Flow IAT Max","Flow IAT Min",
+    "Fwd IAT Total","Fwd IAT Mean","Fwd IAT Std","Fwd IAT Max",
+    "Fwd IAT Min","Bwd IAT Total","Bwd IAT Mean","Bwd IAT Std",
+    "Bwd IAT Max","Bwd IAT Min","Fwd PSH Flags","Fwd URG Flags",
+    "Fwd Header Length","Bwd Header Length","Fwd Packets/s",
+    "Bwd Packets/s","Min Packet Length","Max Packet Length",
+    "Packet Length Mean","Packet Length Std","Packet Length Variance",
+    "FIN Flag Count","SYN Flag Count","RST Flag Count","PSH Flag Count",
+    "ACK Flag Count","URG Flag Count","CWE Flag Count","ECE Flag Count",
+    "Down/Up Ratio","Average Packet Size","Avg Fwd Segment Size",
+    "Avg Bwd Segment Size","Fwd Header Length.1",
+    "Subflow Fwd Packets","Subflow Fwd Bytes",
+    "Subflow Bwd Packets","Subflow Bwd Bytes",
+    "Init_Win_bytes_forward","Init_Win_bytes_backward",
+    "act_data_pkt_fwd","min_seg_size_forward",
+    "Active Mean","Active Std","Active Max","Active Min",
+    "Idle Mean","Idle Std","Idle Max","Idle Min",
+    "avg_packet_size","fwd_pkt_range","bwd_pkt_range",
 ]
 
-# 73 representative CICIDS2017 feature names (post correlation-filter)
-SAMPLE_FEATURE_NAMES = [
-    "Destination Port","Protocol","Flow Duration","Total Fwd Packets","Total Backward Packets",
-    "Total Length of Fwd Packets","Total Length of Bwd Packets","Fwd Packet Length Max",
-    "Fwd Packet Length Min","Fwd Packet Length Mean","Fwd Packet Length Std",
-    "Bwd Packet Length Max","Bwd Packet Length Min","Bwd Packet Length Mean",
-    "Bwd Packet Length Std","Flow Bytes/s","Flow Packets/s","Flow IAT Mean",
-    "Flow IAT Std","Flow IAT Max","Flow IAT Min","Fwd IAT Total","Fwd IAT Mean",
-    "Fwd IAT Std","Fwd IAT Max","Fwd IAT Min","Bwd IAT Total","Bwd IAT Mean",
-    "Bwd IAT Std","Bwd IAT Max","Bwd IAT Min","Fwd PSH Flags","Bwd PSH Flags",
-    "Fwd URG Flags","Bwd URG Flags","Fwd Header Length","Bwd Header Length",
-    "Fwd Packets/s","Bwd Packets/s","Min Packet Length","Max Packet Length",
-    "Packet Length Mean","Packet Length Std","Packet Length Variance","FIN Flag Count",
-    "SYN Flag Count","RST Flag Count","PSH Flag Count","ACK Flag Count","URG Flag Count",
-    "CWE Flag Count","ECE Flag Count","Down/Up Ratio","Average Packet Size",
-    "Avg Fwd Segment Size","Avg Bwd Segment Size","Fwd Header Length.1",
-    "Fwd Avg Bytes/Bulk","Fwd Avg Packets/Bulk","Fwd Avg Bulk Rate",
-    "Bwd Avg Bytes/Bulk","Bwd Avg Packets/Bulk","Bwd Avg Bulk Rate",
-    "Subflow Fwd Packets","Subflow Fwd Bytes","Subflow Bwd Packets","Subflow Bwd Bytes",
-    "Init_Win_bytes_forward","Init_Win_bytes_backward","act_data_pkt_fwd",
-    "min_seg_size_forward","Active Mean","Active Std","Active Max",
+# Rows corresponding to the 73 features above (three example flows)
+SAMPLE_CSV_ROWS = [
+    "80,0.7798274,1,0.68337727,0.5243554,0.8570111,0.6458244,-0.37255234,0.25551075,1.0489987,0.99770284,0,1.0385096,1.083125,-0.04952005,-0.006316472,0.7682475,0.53317225,0.77946776,0.3710491,0.8315301,0.83057684,1.1237686,0.8304062,0.7883953,0.9799758,0.9847786,1.1316011,0.97982883,0.2856457,0,0,1.230483,1.5238419,-0.5590332,-0.52686816,-0.37762213,0.90821683,1.0099504,0.9050604,0.8490192,5.6713157,0,0,0,0,0,0,0,0,1.0703446,0.25551075,1.0385096,1.230483,1,0.52435535,0.68337727,0.8570111,-0.5060647,0.7339891,0.25415918,0,2.4425347,0,2.43745,2.45111,2.4027748,3.4780214,2.4063945,2.392535,0.030667111,0.95121646,1.1587068",
+    "443,0.2456789,2,1.2345678,0.6789012,0.9012345,0.754321,-0.1876543,0.3987654,1.0234567,0.8876543,0.1234567,0.9345678,1.054321,-0.0312345,-0.0076543,0.7456789,0.5189012,0.754321,0.3987654,0.8123456,0.8012345,1.0987654,0.8234567,0.7654321,0.9456789,0.956789,1.0876543,0.9345678,0.2876543,0,0,1.1987654,1.4987654,-0.5432109,-0.5123456,-0.354321,0.8765432,0.9876543,0.8765432,0.8234567,5.1234567,0,0,0,1,0,0,0,0,1.0345678,0.2876543,0.9876543,1.1987654,1,0.5890123,0.6456789,0.8123456,-0.0234567,0.7123456,0.2890123,0,2.3890123,0,2.3876543,2.3987654,2.3789012,3.4234567,2.3901234,2.3765432,0.0298765,0.9432109,1.1345678",
+    "53,0.5123456,3,1.6789012,0.8234567,1.0123456,0.8987654,-0.1432109,0.4789012,1.1123456,0.9345678,0.2345678,0.9654321,1.0987654,-0.0456789,-0.0087654,0.7789012,0.5432109,0.7890123,0.4234567,0.8456789,0.8345678,1.1234567,0.8456789,0.7987654,0.9765432,0.9876543,1.1098765,0.956789,0.3098765,0,0,1.2987654,1.5234567,-0.5678901,-0.5345678,-0.3890123,0.9123456,1.0234567,0.9123456,0.856789,6.0123456,0,0,0,1,0,0,0,0,1.056789,0.2987654,1.0123456,1.2987654,1,0.6234567,0.6789012,0.8456789,-0.0456789,0.7345678,0.3123456,0,2.4123456,0,2.4098765,2.4234567,2.3987654,3.4789012,2.4012345,2.3987654,0.0312345,0.9589012,1.1678901",
 ]
 
 def make_sample_csv():
