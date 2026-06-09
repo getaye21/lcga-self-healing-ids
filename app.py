@@ -735,71 +735,49 @@ with tabs[3]:
             else SAMPLE_FEATURE_NAMES
         )
 
-        n_cols = df_raw.shape[1]
+        # ── 6. Align to expected features ─────────────────────────────────────
+        n_cols = df_raw.shape[1]   # <-- define before the alignment block
 
-        # ── 6. ROBUST ALIGNMENT ───────────────────────────────────────────────
-        #  Priority order:
-        #  (a) 73 named features present → select by name in correct order
-        #  (b) Exactly 73 columns → assume positional mapping
-        #  (c) More than 73 columns → trim to first 73 (positional)
-        #  (d) Fewer than 73 columns → pad missing with 0
-
+        # 1. Check how many expected features exist by name
         named_match = [c for c in expected if c in df_raw.columns]
 
         if len(named_match) == 73:
-            # (a) Perfect named match — reorder to expected
+            # Perfect named match — select in order
             df_raw = df_raw[expected]
-            st.success(f"✅ Aligned 73 named CICIDS2017 features (by column name)")
+            st.success(f"✅ Aligned 73 named CICIDS2017 features")
         elif n_cols == 73:
-            # (b) Count matches — assume positional alignment
+            # Column count matches — assume positional alignment
             df_raw.columns = expected
             st.success(f"✅ Positionally mapped {n_cols} columns to expected feature names")
         elif n_cols > 73:
-            # (c) Extra columns — try named first, then trim
-            if len(named_match) > 0:
-                # Use named ones we have + pad the rest
-                for col in expected:
-                    if col not in df_raw.columns:
-                        df_raw[col] = 0.0
-                df_raw = df_raw[expected]
-                st.info(f"Used {len(named_match)} named features; padded "
-                        f"{73 - len(named_match)} missing features with 0 "
-                        f"(dropped {n_cols - 73} extra columns)")
-            else:
-                # No named match — positional trim
-                df_raw = df_raw.iloc[:, :73].copy()
-                df_raw.columns = expected
-                st.info(f"Trimmed from {n_cols} → 73 columns (positional mapping)")
+            # Extra columns — trim to first 73
+            df_raw = df_raw.iloc[:, :73]
+            df_raw.columns = expected
+            st.info(f"Trimmed from {n_cols} → 73 columns (positional mapping)")
         else:
-            # (d) Fewer columns — pad missing with 0
+            # Fewer columns — pad missing with 0, keep named if available
             for col in expected:
                 if col not in df_raw.columns:
                     df_raw[col] = 0.0
             df_raw = df_raw[expected]
-            st.info(f"Padded {73 - n_cols} missing feature(s) with 0 "
-                    f"(had {n_cols}, need 73)")
+            st.info(f"Padded {73 - len(named_match)} missing feature(s) with 0")
 
-        # Always sync expected to the final column list
-        expected = list(df_raw.columns)
+        expected = list(df_raw.columns)  # always update
 
-        # ── 7. Final shape check ──────────────────────────────────────────────
-        assert df_raw.shape[1] == 73, (
-            f"Internal alignment error: got {df_raw.shape[1]} columns, expected 73. "
-            "Please report this as a bug."
-        )
+        # ── 7. Scale ──────────────────────────────────────────────────────────
+        if scaler is not None:
+            try:
+                X = scaler.transform(df_raw.values.astype(np.float32))
+            except Exception as scale_err:
+                st.warning(f"Scaler could not be applied ({scale_err}). Using raw values.")
+                X = df_raw.values.astype(np.float32)
+        else:
+            X = df_raw.values.astype(np.float32)
 
-        X = df_raw.values.astype(np.float32)
         feature_names = list(expected)
         st.success(f"Loaded **{len(X)} flow(s)** | Features after alignment: {X.shape[1]}")
 
-        # ── 8. Scale ──────────────────────────────────────────────────────────
-        if scaler is not None:
-            try:
-                X = scaler.transform(X)
-            except Exception as scale_err:
-                st.warning(f"Scaler could not be applied ({scale_err}). Using raw values.")
-
-        # ── 9. Predict ────────────────────────────────────────────────────────
+        # ── 8. Predict ────────────────────────────────────────────────────────
         st.markdown("#### 🎯 Predictions")
         if model_loaded and dt_model is not None:
             raw_preds = dt_model.predict(X)
@@ -830,7 +808,7 @@ with tabs[3]:
             st.write(f"{icon} **Sample {i+1}:** `{preds[i]}` — "
                      f"{probas[i].max():.1%} confidence")
 
-        # ── 10. SHAP Explanation ──────────────────────────────────────────────
+        # ── 9. SHAP Explanation ──────────────────────────────────────────────
         st.markdown("#### 🧠 SHAP Explanation (first sample)")
         st.markdown("""
 > **What you're seeing:** Red bars = features that push the prediction *toward* this attack class.
