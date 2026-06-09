@@ -731,7 +731,7 @@ The Label column (if present) is ignored during prediction.</div>
     uploaded = st.file_uploader(
         "Upload CSV (any size — rows = flows, columns = CICIDS2017 features)",
         type=["csv"],
-        help="Columns are auto-aligned to 73 expected features. Label column is ignored.",
+        help="Columns are auto-aligned to 73 expected features.",
     )
 
     if uploaded is not None:
