@@ -391,7 +391,7 @@ This thesis presents an **Optimised Hybrid Deep Learning Framework** integrating
         """)
     with col2:
         st.markdown("### Framework Architecture")
-        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_container_width=True)
+        st.image(_ARCH_IMG, caption="Fig 1. LCGA System Architecture", use_column_width=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Methodology
@@ -400,7 +400,7 @@ with tabs[1]:
     st.header("⚙️ Methodology")
 
     with st.expander("🏗️ LCGA Architecture (41,260 parameters)", expanded=True):
-        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_container_width=True)
+        st.image(_ARCH_IMG, caption="Fig 2. LCGA Framework Architecture", use_column_width=True)
         st.markdown("""
 | Block | Layer | Config | Output Shape |
 |-------|-------|--------|-------------|
@@ -435,7 +435,7 @@ at **11,635× the speed of LIME**.
         """)
 
     with st.expander("🔄 MAPE-K Orchestrator — What does Self-Healing mean?"):
-        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_container_width=True)
+        st.image(_MAPEK_IMG, caption="Fig 3. MAPE-K Closed-Loop Orchestrator", use_column_width=True)
         st.markdown("""
 **Self-healing** means the system detects an attack, decides on a corrective action,
 applies it, and then *verifies* that the network intent was actually restored —
@@ -898,7 +898,7 @@ with tabs[4]:
     st.image(_MAPEK_IMG,
              caption="MAPE-K Closed-Loop: Monitor → Analyse → Plan → Execute → Verify → KB update. "
                      "3 consecutive healing failures trigger deprioritisation and escalation.",
-             use_container_width=True)
+             use_column_width=True)
     st.markdown("---")
 
     with st.expander("📋 How to use this simulator", expanded=False):
