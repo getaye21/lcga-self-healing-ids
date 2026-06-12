@@ -226,7 +226,7 @@ _MAPEK_IMG = "data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJ
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# UNIVERSAL FILE DECODER
+# FAST PATH: Direct CSV load for files that already have 73 CICIDS features
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _normalise_col(name: str) -> str:
@@ -242,6 +242,98 @@ def _map_column(col: str) -> Optional[str]:
             return feat
     return _ALIASES.get(norm)
 
+def _fast_align_73_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Lightweight alignment for a DataFrame that already has 73 columns.
+    Renames columns using alias map, drops non-feature columns, ensures order."""
+    # 1. Rename columns using the alias map
+    rename = {}
+    for col in df.columns:
+        canon = _map_column(col)
+        if canon:
+            rename[col] = canon
+    if rename:
+        df = df.rename(columns=rename)
+
+    # 2. Keep only columns that are in the 73-feature list
+    keep = [c for c in df.columns if c in CICIDS_FEATURES]
+    if len(keep) != 73:
+        raise ValueError(f"After renaming, only {len(keep)} of 73 features remain.")
+    df = df[keep]
+
+    # 3. Convert to numeric, fill missing, ensure order
+    df = df.apply(pd.to_numeric, errors='coerce')
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df.fillna(0, inplace=True)
+    return df.astype(np.float32).reset_index(drop=True)
+
+def try_fast_csv_load(file_bytes: bytes, filename: str) -> Tuple[Optional[pd.DataFrame], str]:
+    """Attempt to load CSV as a 73-feature CICIDS file (fast path).
+    Returns (None, error_message) if fails."""
+    ext = Path(filename).suffix.lower().lstrip(".")
+    if ext not in ("csv", "tsv", "txt"):
+        return None, "Not a delimited text file."
+
+    # Decode text
+    text = None
+    for enc in ("utf-8", "latin-1", "cp1252"):
+        try:
+            text = file_bytes.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+    if text is None:
+        text = file_bytes.decode("utf-8", errors="replace")
+
+    lines = text.splitlines()
+    if not lines:
+        return None, "Empty file."
+
+    # Detect separator
+    sep = ","
+    if "\t" in lines[0]:
+        sep = "\t"
+
+    # Read only first few rows to check column count
+    try:
+        df_sample = pd.read_csv(io.StringIO(text), sep=sep, nrows=5, low_memory=False)
+    except Exception:
+        return None, "Failed to parse as CSV."
+
+    # Column count must be exactly 73 (or 74 if one is a label column)
+    n_cols = df_sample.shape[1]
+    if n_cols not in (73, 74):
+        return None, f"Expected 73 or 74 columns, got {n_cols}."
+
+    # Try to rename columns – if too many unknown columns, fall back
+    rename_map = {}
+    unknown = 0
+    for col in df_sample.columns:
+        canon = _map_column(col)
+        if canon:
+            rename_map[col] = canon
+        else:
+            unknown += 1
+    # If more than 5 columns are unknown, assume it's not a standard CICIDS file
+    if unknown > 5:
+        return None, f"Too many unknown column names ({unknown})."
+
+    # Load full file, apply renaming, align
+    try:
+        df = pd.read_csv(io.StringIO(text), sep=sep, low_memory=False)
+        # Drop any label column if present
+        label_cols = [c for c in df.columns if _normalise_col(c) in _NON_FEATURE_COLS]
+        if label_cols:
+            df = df.drop(columns=label_cols)
+        df = _fast_align_73_features(df)
+        return df, f"Fast path: loaded {len(df)} flows with 73 features."
+    except Exception as e:
+        return None, f"Fast path alignment failed: {e}"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# UNIVERSAL FILE DECODER (slow path, fallback)
+# ══════════════════════════════════════════════════════════════════════════════
+
 def _zero_flow() -> dict:
     return {f: 0.0 for f in CICIDS_FEATURES}
 
@@ -250,7 +342,7 @@ def _split_chunks(arr: np.ndarray, n: int) -> list:
     return [arr[i * size:(i + 1) * size] for i in range(n)]
 
 def _clean_and_align(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename → drop non-features → pad missing → float32."""
+    """Heavy cleaning and alignment for arbitrary files."""
     # 1. Drop known non-feature columns
     drop = [c for c in df.columns if _normalise_col(c) in _NON_FEATURE_COLS]
     df = df.drop(columns=drop, errors="ignore")
@@ -286,8 +378,11 @@ def _clean_and_align(df: pd.DataFrame) -> pd.DataFrame:
             df[feat] = 0.0
     df = df[CICIDS_FEATURES]
 
-    # 6. Clean
-    df = df.apply(pd.to_numeric, errors="coerce")
+    # 6. Clean – vectorised conversion
+    df = df.infer_objects()
+    for col in df.columns:
+        if df[col].dtype == object:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
     df.fillna(0, inplace=True)
     return df.astype(np.float32).reset_index(drop=True)
@@ -1122,7 +1217,7 @@ with tabs[2]:
     st.caption("Fig 6. Removing KB feedback (B) drops ISR by 15.2pp. Open-loop (C) = 0% ISR by definition.")
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — Live Detection  (UNIVERSAL FILE INPUT)
+# TAB 3 — Live Detection  (UNIVERSAL FILE INPUT with FAST PATH)
 # ══════════════════════════════════════════════════════════════════════════════
 with tabs[3]:
     st.header("🔬 Live Network Flow Classification")
@@ -1134,7 +1229,7 @@ with tabs[3]:
 
 | Format | How it's decoded |
 |--------|-----------------|
-| `.csv` / `.tsv` / `.txt` | Direct column alignment with alias mapping |
+| `.csv` / `.tsv` / `.txt` | Direct column alignment with alias mapping (fast path if 73 features) |
 | `.xlsx` / `.xls` | First non-empty worksheet |
 | `.json` / `.jsonl` | Array, object, or newline-delimited records |
 | `.parquet` | Columnar binary (requires pyarrow) |
@@ -1191,14 +1286,28 @@ with tabs[3]:
             st.warning("⚠️ The uploaded file appears to be empty. Please upload a file with content.")
             st.stop()
 
-        # ── Decode ────────────────────────────────────────────────────────────
-        decode_placeholder = st.empty()
-        decode_placeholder.info(
-            f"🔄 Decoding **{filename}** ({len(file_bytes):,} bytes)…"
-        )
+        # ── Try fast path first (only for CSV with 73 features) ────────────────
+        df_flows = None
+        decode_info = None
+        fast_success = False
 
-        df_flows, decode_info = decode_file(file_bytes, filename)
-        decode_placeholder.success(f"✅ {decode_info}")
+        if Path(filename).suffix.lower().lstrip(".") in ("csv", "tsv", "txt"):
+            with st.spinner("⚡ Attempting fast CSV load (direct 73‑feature alignment)..."):
+                df_flows, decode_info = try_fast_csv_load(file_bytes, filename)
+                if df_flows is not None:
+                    fast_success = True
+                    st.success(f"✅ Fast path success: {decode_info}")
+                else:
+                    st.info(f"Fast path not applicable ({decode_info}). Falling back to universal decoder...")
+
+        # ── Fallback to universal decoder ─────────────────────────────────────
+        if not fast_success:
+            decode_placeholder = st.empty()
+            decode_placeholder.info(
+                f"🔄 Decoding **{filename}** ({len(file_bytes):,} bytes) using universal decoder…"
+            )
+            df_flows, decode_info = decode_file(file_bytes, filename)
+            decode_placeholder.success(f"✅ {decode_info}")
 
         X             = df_flows.values.astype(np.float32)
         feature_names = list(df_flows.columns)
